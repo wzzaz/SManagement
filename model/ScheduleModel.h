@@ -59,6 +59,8 @@ public:
 
     ScheduleStruct selectSchedule(const int index);
 
+    int size() { return m_scheduleData.size(); }
+
 private:
     int NameSearchSchedule(const QString name);
     int IdSearchSchedule(const int id);

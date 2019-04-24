@@ -17,7 +17,7 @@ public:
                     QObject *parent = nullptr);
     ~ScheduleManager();
 
-    void initialize();
+    Q_INVOKABLE void initialize();
 
     /// *** Schedule
     ///
@@ -25,9 +25,9 @@ public:
     // void selectSchedule(const int index);
     // void selectSchedule(const QString name);
 
-    void addSchedule(const QString name, const int priority);
+    Q_INVOKABLE void addSchedule(const QString name, const int priority);
 
-    bool editScheduleName(const int schId, const QString name);
+    Q_INVOKABLE bool editScheduleName(const int schId, const QString name);
     // bool editScheduleName(const int index,const QString name);
     // bool editScheduleName(const QString srcName,const QString newName);
 
@@ -35,7 +35,7 @@ public:
     // bool editSchedulePriority(const int index,const int priority);
     // bool editSchedulePriority(const QString srcName,const int priority);
 
-    void removeSchedule(const int schId);
+    Q_INVOKABLE void removeSchedule(const int schId);
     // void removeSchedule(const int index);
     // void removeSchedule(const QString name);
 
@@ -45,19 +45,23 @@ public:
     // void selectSubSchedule(const int index);
     // void selectSubSchedule(const QString name);
 
-    void addSubSchedule(const QString name);
+    Q_INVOKABLE void addSubSchedule(const QString name, const int order);
 
-    bool editSubScheduleName(const int subId, const QString name);
+    Q_INVOKABLE bool editSubScheduleName(const int subId, const QString name);
 
-    void removeSubSchedule(const int subId);
+    Q_INVOKABLE void removeSubSchedule(const int subId, const int order);
     // void removeSubSchedule(const QString name);
+
+    Q_INVOKABLE void moveSubSchedule(const int fromId, const int toId);
 
     ///* Stage
     void selectStage(const int index);
 
-    void addStage(const QDateTime date, const QString details, const QString result);
+    void addStage(const QDateTime date, const QString title, const QString details, const QString result);
 
     bool editStageDate(const int stageId, const QDateTime date);
+
+    bool editStageTitle(const int stageId, const QString title);
 
     bool editStageDetails(const int stageId, const QString details);
 
@@ -66,9 +70,17 @@ public:
     void removeStage(const int stageId);
 
 signals:
+    void scheduleAdded(int index);
+    void subScheduleAdded(int index);
+    void subScheduleReset();
 
 private:
+    enum {
+        Add,
+        Minus
+    };
     void unfoldSubScheduleAndStage(const int scheduleId);
+    void updateBehindSubScheduleOrder(const int startOrder,const int unChangeId, const int type);
 
 private:
 

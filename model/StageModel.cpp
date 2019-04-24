@@ -7,6 +7,12 @@ StageModel::StageModel(QObject *parent)
     m_stageData.clear();
 }
 
+StageModel::~StageModel()
+{
+    m_stageData.clear();
+    qDebug() << "~StageModel()" << this;
+}
+
 int StageModel::rowCount(const QModelIndex &parent) const
 {
     Q_UNUSED(parent);
@@ -25,6 +31,9 @@ QVariant StageModel::data(const QModelIndex &index, int role) const
         if (role == DateRole) {
             StageStruct stage = m_stageData.at(index.row());
             return QVariant::fromValue(stage.dateTime);
+        } else if (role == TitleRole) {
+            StageStruct stage = m_stageData.at(index.row());
+            return QVariant::fromValue(stage.title);
         } else if (role == DetailRole) {
             StageStruct stage = m_stageData.at(index.row());
             return QVariant::fromValue(stage.details);
@@ -47,6 +56,10 @@ bool StageModel::setData(const QModelIndex &index, const QVariant &value, int ro
             stage.dateTime = value.toDateTime();
             m_stageData.replace(index.row(), stage);
             return true;
+        } else if (role == TitleRole ) {
+            StageStruct stage = m_stageData.at(index.row());
+            stage.title = value.toString();
+            m_stageData.replace(index.row(), stage);
         } else if (role == DetailRole ) {
             StageStruct stage = m_stageData.at(index.row());
             stage.details = value.toString();
@@ -69,16 +82,17 @@ QHash<int, QByteArray> StageModel::roleNames() const
     QHash<int, QByteArray> roles;
 
     roles[DateRole] = "date";
+    roles[TitleRole] = "title";
     roles[DetailRole] = "details";
     roles[ResultRole] = "result";
     roles[IdRole] = "id";
     return roles;
 }
 
-void StageModel::addStage(QDateTime date, QString details, QString result, int id)
+void StageModel::addStage(QDateTime date, QString title, QString details, QString result, int id)
 {
     beginInsertRows(QModelIndex(), m_stageData.size(), m_stageData.size());
-    m_stageData.append(StageStruct(date,details,result,id));
+    m_stageData.append(StageStruct(date,title,details,result,id));
     endInsertRows();
 }
 
@@ -111,6 +125,22 @@ void StageModel::editDate(const QDateTime date, const int id)
 {
     int index = IdSearchStage(id);
     editDate(index,date);
+}
+
+void StageModel::editTitle(const int index, const QString title)
+{
+    if ( index >=0 && index < m_stageData.size() ) {
+        StageStruct stage = m_stageData.at(index);
+        stage.title = title;
+        m_stageData.replace(index, stage);
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+    }
+}
+
+void StageModel::editTitle(const QString title, const int id)
+{
+    int index = IdSearchStage(id);
+    editTitle(index,title);
 }
 
 void StageModel::editDetails(const int index, const QString details)
@@ -148,6 +178,7 @@ void StageModel::editResult(const QString result, const int id)
 void StageModel::clear()
 {
     beginResetModel();
+    qDebug() << "StageModel::clear()" << m_stageData.size();
     m_stageData.clear();
     endResetModel();
 }

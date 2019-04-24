@@ -1,7 +1,9 @@
 #include <QGuiApplication>
+#include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
 #include <QDebug>
+#include <QFont>
 
 #include "Schedule.h"
 #include "model/ScheduleModel.h"
@@ -10,21 +12,11 @@
 
 int main(int argc, char *argv[])
 {
-    QCoreApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
+    QApplication::setAttribute(Qt::AA_EnableHighDpiScaling);
 
-    QGuiApplication app(argc, argv);
+    QApplication app(argc, argv);
 
     QQmlApplicationEngine engine;
-
-//    qmlRegisterUncreatableType<ScheduleModel, 1>("com.test.model", 1, 0,
-//                                                   "ScheduleModel",
-//                                                   "Cannot create ScheduleModel");
-//    ScheduleModel *scheduleModel = new ScheduleModel();
-//    engine.rootContext()->setContextProperty("scheduleModel", scheduleModel);
-
-//    SubScheduleStageModel *subModel = new SubScheduleStageModel();
-//    engine.rootContext()->setContextProperty("subScheduleStageModel", subModel);
-//    subModel->initialize();
 
     qmlRegisterUncreatableType<StageModel, 1>("com.stage.model", 1, 0,
                                                    "StageModel",
@@ -39,11 +31,9 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("scheduleManager", scheduleManager);
     scheduleManager->initialize();
 
-//    subSchModel->addSubSchedule("A",0);
-//    subSchModel->addStage(0, QDateTime(QDate(),QTime()), "0", "", 1);
-//    subSchModel->addStage(0, QDateTime(QDate(),QTime()), "1", "", 2);
-//    subSchModel->addStage(0, QDateTime(QDate(),QTime()), "2", "", 3);
-
+    QFont font("Source Code Pro");
+    font.setPixelSize(15);
+    app.setFont(font);
 
 
     engine.load(QUrl(QStringLiteral("qrc:/main.qml")));

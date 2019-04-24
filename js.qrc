@@ -1,5 +1,7 @@
 <RCC>
     <qresource prefix="/">
         <file>Common.js</file>
+        <file>size.js</file>
+        <file>color.js</file>
     </qresource>
 </RCC>

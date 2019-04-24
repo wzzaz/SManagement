@@ -1,0 +1,25 @@
+<RCC>
+    <qresource prefix="/">
+        <file>res/edit.png</file>
+        <file>res/editHover.png</file>
+        <file>res/editPress.png</file>
+        <file>res/remove.png</file>
+        <file>res/removeHover.png</file>
+        <file>res/removePress.png</file>
+        <file>res/details.png</file>
+        <file>res/detailsHover.png</file>
+        <file>res/detailsPress.png</file>
+        <file>res/home.png</file>
+        <file>res/homeHover.png</file>
+        <file>res/homePress.png</file>
+        <file>res/add.png</file>
+        <file>res/addHover.png</file>
+        <file>res/addPress.png</file>
+        <file>res/addSub.png</file>
+        <file>res/addSubHover.png</file>
+        <file>res/addSubPress.png</file>
+        <file>res/swap.png</file>
+        <file>res/swapHover.png</file>
+        <file>res/swapPress.png</file>
+    </qresource>
+</RCC>

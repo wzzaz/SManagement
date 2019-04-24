@@ -3,5 +3,7 @@
         <file>main.qml</file>
         <file>ScheduleView.qml</file>
         <file>SubScheduleView.qml</file>
+        <file>IconButton.qml</file>
+        <file>SMenuStyle.qml</file>
     </qresource>
 </RCC>
