@@ -55,3 +55,11 @@ function overDateForNow(date) {
     }
     return false
 }
+
+function nearThreeDayForNow(date) {
+    var now = new Date
+    if( now > date - 259200000 ) {  // 1000*60*60*24*3
+        return true
+    }
+    return false
+}

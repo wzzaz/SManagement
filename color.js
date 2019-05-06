@@ -15,15 +15,19 @@ function sNavajoWhite_Half() {
 }
 
 function waitingStateColor() {
-    return "#CD5C5C"
+    return "#00FF7F" //green
 }
 
 function unDoneStateColor() {
-    return "#BEBEBE"
+    return "#CD5C5C" //red
 }
 
 function doneStateColor() {
-    return "#00FF7F"
+    return "#BEBEBE" //gray
+}
+
+function nearPastDueColor() {
+    return "#FFA500" //orange
 }
 
 function selectionColor() {

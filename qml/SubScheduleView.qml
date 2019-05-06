@@ -472,8 +472,23 @@ Item {
                                     id: stateRec
                                     width: 15
                                     height: parent.height
-                                    color: Common.overDateForNow(date) ? (Common.isEmptyString(result) ? Color.unDoneStateColor() : Color.doneStateColor())
-                                                                       : Color.waitingStateColor()
+                                    color: {
+                                        if( Common.overDateForNow(date) ) {
+                                            if( Common.isEmptyString(result) ) {
+                                                return Color.unDoneStateColor()
+                                            } else {
+                                                return Color.doneStateColor()
+                                            }
+                                        } else {
+                                            if( Common.nearThreeDayForNow(date) ) {
+                                                return Color.nearPastDueColor()
+                                            } else {
+                                                return Color.waitingStateColor()
+                                            }
+                                        }
+                                    }
+                                        /* Common.overDateForNow(date) ? (Common.isEmptyString(result) ? Color.unDoneStateColor() : Color.doneStateColor())
+                                                                       : Color.waitingStateColor() */
                                     anchors.right: parent.right
                                 }
                             }
