@@ -5,7 +5,6 @@
 #include <QDebug>
 #include <QFont>
 
-#include "Schedule.h"
 #include "model/ScheduleModel.h"
 #include "model/SubScheduleModel.h"
 #include "ScheduleManager.h"
@@ -36,7 +35,7 @@ int main(int argc, char *argv[])
     app.setFont(font);
 
 
-    engine.load(QUrl(QStringLiteral("qrc:/main.qml")));
+    engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));
     if (engine.rootObjects().isEmpty())
         return -1;
 

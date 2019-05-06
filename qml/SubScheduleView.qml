@@ -1,12 +1,38 @@
-import QtQuick 2.0
-import QtQuick.Controls 2.2
-import "Common.js" as Common
-import "size.js" as Size
-import "color.js" as Color
+import QtQuick 2.12
+import QtQuick.Controls 2.5
+import "../size.js" as Size
+import "../color.js" as Color
+import "../Common.js" as Common
 
 Item {
     implicitWidth: 900
     implicitHeight: 800
+
+    signal sigSelectStage(date date, string title, string details, string result, int id)
+    signal clearStageEdit()
+
+    property bool __stageBeRemoved: false
+
+    property bool __subScheduleBeRemoved: false
+
+    function isValueBeEdited(){}
+
+    function __forceSelectStage() {
+        if( isValueBeEdited() )
+        {
+            var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
+            if( !flag )
+            {
+                return true
+            }
+
+            return false
+        }
+        else
+        {
+            return true
+        }
+    }
 
     ListView {
         id: view
@@ -22,7 +48,7 @@ Item {
 
         property int __fromSwapIndex
 
-        property int __toSwapIndex
+        property int __toSwapIndex        
 
         add: Transition {
             NumberAnimation { properties: "x,y"; duration: 200 }
@@ -41,6 +67,21 @@ Item {
         }
         clip: true
         ScrollBar.vertical: ScrollBar {}
+
+        onCurrentIndexChanged: {
+            clearStageEdit()
+            if(currentItem)
+                currentItem.selectCurStageAction()
+        }
+        onCountChanged: {
+            if( !__subScheduleBeRemoved )
+                return
+
+            __subScheduleBeRemoved = false
+            clearStageEdit()
+            if(currentItem)
+                currentItem.selectCurStageAction()
+        }
     }
 
 
@@ -63,10 +104,28 @@ Item {
     Connections {
         target: scheduleManager
         onSubScheduleAdded: {
-            goEditAddedSubSchedule(index)
+            if( __forceSelectStage() )
+            {
+                goEditAddedSubSchedule(index)
+            }
+        }
+        onStageAdded: {
+            if( __forceSelectStage() )
+            {
+                goSelectAddedStage(index)
+            }
         }
         onSubScheduleReset: {
+            clearStageEdit()
             view.readySwapFromId = -1
+            view.readyForSwap = false
+        }
+        onSubScheduleRemoved: {
+            __subScheduleBeRemoved = true
+        }
+
+        onStageRemoved: {
+            __stageBeRemoved = true
         }
     }
 
@@ -75,16 +134,21 @@ Item {
         view.currentItem.editNameAction()
     }
 
+    function goSelectAddedStage(index) {
+        view.currentItem.selectAddedStageAction(index)
+    }
+
     Component {
         id: subScheduleDelegate
         Rectangle {
             id: wrapper
-            width: 1020
+            width: parent.width
             height: 190
             property var __view: wrapper.ListView.view
             property bool hovered: false
             property bool editing: false
             property bool readySwap: __view.readySwapFromId === id
+            property bool curChecked: __view.currentIndex === index
 
             function editNameAction() {
                 if( wrapper.editing ) {
@@ -94,13 +158,31 @@ Item {
                 }
             }
 
+            function selectCurStageAction() {
+                if(stageView.currentItem)
+                    stageView.currentItem.selectStageAction()
+            }
+
+            function selectAddedStageAction(index) {
+                stageView.currentIndex = index
+                selectCurStageAction()
+            }
+
+
+            function selectCurrentSubSchedule() {
+                wrapper.__view.currentIndex = index
+                scheduleManager.selectSubSchedule(index)
+            }
+
             MouseArea {
                 anchors.fill: parent
                 hoverEnabled: true
-//                onClicked: {
-//                    wrapper.__view.currentIndex = index
-//                    scheduleManager.selectSubSchedule(index)
-//                }
+                onClicked: {
+                    if( curChecked || __forceSelectStage() )
+                    {
+                        wrapper.selectCurrentSubSchedule()
+                    }
+                }
                 onEntered: wrapper.hovered = true
                 onExited: wrapper.hovered = false
             }
@@ -133,18 +215,21 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        wrapper.__view.currentIndex = index
-                        scheduleManager.selectSubSchedule(index)
+                        if( curChecked || __forceSelectStage() )
+                        {
+                            wrapper.selectCurrentSubSchedule()
+                        }
                     }
                     onEntered: wrapper.hovered = true
                     onExited: wrapper.hovered = false
                 }
                 Text {
                     anchors.centerIn: parent
-                    anchors.left: parent.left
-                    anchors.right: parent.right
-                    anchors.leftMargin: 5
-                    anchors.rightMargin: 5
+//                    anchors.left: parent.left
+//                    anchors.right: parent.right
+//                    anchors.leftMargin: 5
+//                    anchors.rightMargin: 5
+                    width: parent.width - 10
                     text: name
                     visible: !wrapper.editing
                     wrapMode: Text.WordWrap
@@ -191,24 +276,24 @@ Item {
                 }
 
                 IconButton {
-                    id: removeBtn
-                    anchors.right: parent.right
+                    id: addBtn
+                    anchors.left: parent.left
                     anchors.bottom: parent.bottom
-                    anchors.rightMargin: 32
+                    anchors.leftMargin: 32
                     width: 32
                     height: 32
-                    hoverIcon: "qrc:/res/removeHover.png"
-                    pressIcon: "qrc:/res/removePress.png"
-                    normalIcon: "qrc:/res/remove.png"
+                    hoverIcon: "qrc:/res/addHover.png"
+                    pressIcon: "qrc:/res/addPress.png"
+                    normalIcon: "qrc:/res/add.png"
                     visible: wrapper.hovered && !wrapper.__view.readyForSwap
 
-                    onHoveredChanged: wrapper.hovered = hovered
-                    onClicked: scheduleManager.removeSubSchedule(id,index)
+                    onHoveredChanged:  wrapper.hovered = hovered
+                    onClicked: scheduleManager.addSubSchedule("",index + 1)
                 }
 
                 IconButton {
                     id: editBtn
-                    anchors.right: removeBtn.left
+                    anchors.left: addBtn.right
                     anchors.bottom: parent.bottom
                     width: 32
                     height: 32
@@ -221,26 +306,25 @@ Item {
                     onClicked: wrapper.editNameAction()
                 }
 
-
                 IconButton {
-                    id: addBtn
-                    anchors.right: editBtn.left
+                    id: removeBtn
+                    anchors.left: editBtn.right
                     anchors.bottom: parent.bottom
                     width: 32
                     height: 32
-                    hoverIcon: "qrc:/res/addHover.png"
-                    pressIcon: "qrc:/res/addPress.png"
-                    normalIcon: "qrc:/res/add.png"
+                    hoverIcon: "qrc:/res/removeHover.png"
+                    pressIcon: "qrc:/res/removePress.png"
+                    normalIcon: "qrc:/res/remove.png"
                     visible: wrapper.hovered && !wrapper.__view.readyForSwap
 
-                    onHoveredChanged:  wrapper.hovered = hovered
-                    onClicked: scheduleManager.addSubSchedule("",index + 1)
+                    onHoveredChanged: wrapper.hovered = hovered
+                    onClicked: scheduleManager.removeSubSchedule(id,index)
                 }
             }
 
             IconButton {
                 id: swapBtn
-                anchors.right: subScheduleTitle.right
+                anchors.left: subScheduleTitle.left
                 anchors.bottom: subScheduleTitle.bottom
                 width: 32
                 height: 32
@@ -283,20 +367,66 @@ Item {
                     opacity: 0.5
                 }
 
+                Button {
+                    anchors.left: parent.left
+                    anchors.leftMargin: 6
+                    width: 40
+                    height: parent.height
+                    icon.source: "qrc:/res/add.png"
+                    icon.width: 32
+                    icon.height: 32
+                    onClicked: {
+                        wrapper.selectCurrentSubSchedule()
+                        scheduleManager.insertStage(new Date, "", "", "")
+                    }
+                }
+
                 GridView {
                     id: stageView
-                    width: stageRec.width
                     height: stageRec.height
                     anchors.left: parent.left
-                    anchors.leftMargin: 10
+                    anchors.leftMargin: 50
+                    anchors.right: parent.right
                     anchors.top: parent.top
-                    anchors.margins: 4
+//                    anchors.margins: 4
                     cellWidth: Size.stageWidth + 3
                     cellHeight: Size.stageHeight + 3
                     clip: true
                     model: subScheduleModel.selectStageModel(index)
                     delegate: stageDelegate
                     property int subScheduleIndex: index
+
+                    add: Transition {
+                        NumberAnimation { properties: "x,y"; duration: 200 }
+                    }
+                    move: Transition {
+                        SmoothedAnimation { properties: "x,y"; duration: 500 }
+                    }
+                    remove: Transition {
+                        ParallelAnimation {
+                            NumberAnimation { property: "opacity"; to: 0; duration: 1000 }
+                            NumberAnimation { properties: "y"; to: 100; duration: 1000 }
+                        }
+                    }
+                    displaced: Transition {
+                        NumberAnimation { properties: "x,y"; duration: 500 }
+                    }
+                    ScrollBar.vertical: ScrollBar {}
+
+                    onCurrentIndexChanged: {
+                        clearStageEdit()
+                        if(currentItem)
+                            currentItem.selectStageAction()
+                    }
+                    onCountChanged: {
+                        if(!__stageBeRemoved)
+                            return
+
+                        __stageBeRemoved = false
+                        clearStageEdit()
+                        if(currentItem)
+                            currentItem.selectStageAction()
+                    }
                 }
 
                 Component {
@@ -309,11 +439,18 @@ Item {
                         property var __parentSubView: wrapper.__view
                         property bool stageChecked: __view.subScheduleIndex === view.currentIndex && index === __view.currentIndex
 
+                        function selectStageAction() {
+                            sigSelectStage(date,title,details,result,id)
+                        }
+
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                stageWrapper.__view.currentIndex = index
-                                stageWrapper.__parentSubView.currentIndex = __view.subScheduleIndex
+                                if( stageChecked || __forceSelectStage() )
+                                {
+                                    wrapper.selectCurrentSubSchedule()
+                                    stageWrapper.__view.currentIndex = index
+                                }
                             }
                         }
 
@@ -326,7 +463,7 @@ Item {
                                 height: 20
                                 color: "#E0EEEE"
                                 Text {
-                                    text: Common.dateFormat("yyyy-MM-dd hh:mm",date)
+                                    text: Common.dateFormat("yyyy-MM-dd hh:mm:ss",date)
                                     anchors.verticalCenter: parent.verticalCenter
                                     anchors.left: parent.left
                                     anchors.leftMargin: 2

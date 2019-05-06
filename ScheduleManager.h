@@ -3,6 +3,7 @@
 
 #include <QObject>
 #include <QVector>
+#include <QDateTime>
 #include <QModelIndex>
 
 class ScheduleModel;
@@ -57,7 +58,7 @@ public:
     ///* Stage
     void selectStage(const int index);
 
-    void addStage(const QDateTime date, const QString title, const QString details, const QString result);
+    Q_INVOKABLE void insertStage(const QDateTime date, const QString title, const QString details, const QString result);
 
     bool editStageDate(const int stageId, const QDateTime date);
 
@@ -67,11 +68,21 @@ public:
 
     bool editStageResule(const int stageId, const QString result);
 
-    void removeStage(const int stageId);
+    Q_INVOKABLE bool editStage(const int stageId, QDateTime date, QString title, QString details, QString result);
+
+    Q_INVOKABLE void removeStage(const int stageId);
+
+    Q_INVOKABLE int messageBoxForQuestion(const QString showText);
 
 signals:
     void scheduleAdded(int index);
     void subScheduleAdded(int index);
+    void stageAdded(int index);
+
+    void scheduleRemoved();
+    void subScheduleRemoved();
+    void stageRemoved();
+
     void subScheduleReset();
 
 private:

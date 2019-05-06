@@ -1,9 +1,9 @@
 <RCC>
     <qresource prefix="/">
-        <file>main.qml</file>
-        <file>ScheduleView.qml</file>
-        <file>SubScheduleView.qml</file>
-        <file>IconButton.qml</file>
-        <file>SMenuStyle.qml</file>
+        <file>qml/IconButton.qml</file>
+        <file>qml/main.qml</file>
+        <file>qml/ScheduleView.qml</file>
+        <file>qml/StageEditer.qml</file>
+        <file>qml/SubScheduleView.qml</file>
     </qresource>
 </RCC>

@@ -16,13 +16,10 @@ SOURCES += \
         main.cpp \
     data/DBHelper.cpp \
     data/ConnectionPool.cpp \
-    Schedule.cpp \
-    SubSchedule.cpp \
-    ScheduleManager.cpp \
     model/ScheduleModel.cpp \
     model/SubScheduleModel.cpp \
     model/StageModel.cpp \
-    model/SubScheduleStageModel.cpp
+    ScheduleManager.cpp
 
 RESOURCES += management.qrc \
     js.qrc \
@@ -42,13 +39,10 @@ else: unix:!android: target.path = /opt/$${TARGET}/bin
 HEADERS += \
     data/DBHelper.h \
     data/ConnectionPool.h \
-    Schedule.h \
-    SubSchedule.h \
     ScheduleManager.h \
     model/ScheduleModel.h \
     model/SubScheduleModel.h \
-    model/StageModel.h \
-    model/SubScheduleStageModel.h
+    model/StageModel.h
 
 #DISTFILES += \
 #    Common.js

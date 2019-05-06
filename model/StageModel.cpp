@@ -96,6 +96,14 @@ void StageModel::addStage(QDateTime date, QString title, QString details, QStrin
     endInsertRows();
 }
 
+int StageModel::insertStage(QDateTime date, QString title, QString details, QString result, int id)
+{
+    beginInsertRows(QModelIndex(), m_stageData.size(), m_stageData.size());
+    m_stageData.append(StageStruct(date,title,details,result,id));
+    endInsertRows();
+    return orderStageWithDateTime(m_stageData.size() - 1, ASC);
+}
+
 void StageModel::removeStage(const int index)
 {
     if( index >=0 && index < m_stageData.size() ) {
@@ -175,6 +183,22 @@ void StageModel::editResult(const QString result, const int id)
     editResult(index, result);
 }
 
+void StageModel::editStage(const int id, const QDateTime date, const QString title, const QString details, const QString result)
+{
+    int index = IdSearchStage(id);
+    qDebug() << "StageModel::editStage index=" << index << m_stageData.size();
+    if ( index >= 0 && index < m_stageData.size() ) {
+        StageStruct stage = m_stageData.at(index);
+        stage.dateTime = date;
+        stage.title = title;
+        stage.details = details;
+        stage.result = result;
+        m_stageData.replace(index, stage);
+        emit dataChanged(createIndex(index, 0), createIndex(index, 0));
+        orderStageWithDateTime(index, ASC);
+    }
+}
+
 void StageModel::clear()
 {
     beginResetModel();
@@ -193,4 +217,44 @@ int StageModel::IdSearchStage(const int id)
         }
     }
     return -1;
+}
+
+int StageModel::orderStageWithDateTime(const int index, Order order)
+{
+    if( index < 0 || index >= m_stageData.size() )
+        return -1;
+
+    QDateTime orderedDateTime = m_stageData.at(index).dateTime;
+    int curIndex = m_stageData.size() - 1;
+    for ( int i = 0; i < m_stageData.size(); ++i ) {
+        if( i == index )
+            continue;
+
+        QDateTime curDateTime = m_stageData.at(i).dateTime;
+        if( order == DESC )
+        {
+            if( orderedDateTime >= curDateTime ) {
+                qDebug() << "StageModel::orderStageWithDateTime index=" << index << "i=" << i;
+                curIndex = i > index ? i - 1 : i;
+                break;
+            }
+        }
+        else if ( order == ASC )
+        {
+            if( orderedDateTime <= curDateTime ) {
+                qDebug() << "StageModel::orderStageWithDateTime index=" << index << "i=" << i;
+                curIndex = i > index ? i - 1 : i;
+                break;
+            }
+        }
+    }
+    qDebug() << "StageModel::orderStageWithDateTime index=" << index << "curIndex=" << curIndex;
+    if( index == curIndex )
+        return curIndex;
+
+    beginMoveRows(QModelIndex(), index, index, QModelIndex(),
+                  index > curIndex ? curIndex : curIndex + 1);
+    m_stageData.move(index,curIndex);
+    endMoveRows();
+    return curIndex;
 }

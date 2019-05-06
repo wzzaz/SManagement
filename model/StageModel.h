@@ -51,6 +51,8 @@ public:
 
     void addStage(QDateTime date, QString title, QString details, QString result, int id);
 
+    int insertStage(QDateTime date, QString title, QString details, QString result, int id);
+
     void removeStage(const int index);
     void removeStageWithId(const int id);
 
@@ -66,10 +68,17 @@ public:
     void editResult(const int index, const QString result);
     void editResult(const QString result, const int id);
 
+    void editStage(const int id, const QDateTime date, const QString title, const QString details, const QString result);
+
     void clear();
 
 private:
+    typedef enum {
+        ASC,
+        DESC
+    }Order;
     int IdSearchStage(const int id);
+    int orderStageWithDateTime(const int index, Order order);
 
 private:
     QVector<StageStruct> m_stageData;

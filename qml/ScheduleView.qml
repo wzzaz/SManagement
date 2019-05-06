@@ -1,12 +1,32 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
-import "Common.js" as Common
-import "color.js" as Color
+import "../color.js" as Color
+import "../Common.js" as Common
 
 Item {
     implicitWidth: 200
     implicitHeight: 800
 
+    property bool __scheduleBeRemoved: false
+
+    function isValueBeEdited(){}
+
+    function __forceSelectStage() {
+        if( isValueBeEdited() )
+        {
+            var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
+            if( !flag )
+            {
+                return true
+            }
+
+            return false
+        }
+        else
+        {
+            return true
+        }
+    }
 
     ListView {
         id: view
@@ -31,12 +51,26 @@ Item {
         }
         clip: true
         ScrollBar.vertical: ScrollBar {}
+
+        onCurrentIndexChanged: scheduleManager.selectSchedule(currentIndex)
+
+        onCountChanged: {
+            if( !__scheduleBeRemoved )
+                return
+
+            __scheduleBeRemoved = false
+            scheduleManager.selectSchedule(currentIndex)
+        }
     }
 
     Connections {
         target: scheduleManager
         onScheduleAdded: {
-            goEditAddedSchedule(index)
+            if( __forceSelectStage() )
+                goEditAddedSchedule(index)
+        }
+        onScheduleRemoved: {
+            __scheduleBeRemoved = true
         }
     }
 
@@ -72,8 +106,10 @@ Item {
                 preventStealing: true
                 propagateComposedEvents: true
                 onClicked: {
-                    wrapper.ListView.view.currentIndex = index
-                    scheduleManager.selectSchedule(index)
+                    if( __forceSelectStage() )
+                    {
+                        wrapper.ListView.view.currentIndex = index
+                    }
                 }
                 onEntered: wrapper.hovered = true
                 onExited: wrapper.hovered = false
@@ -138,25 +174,24 @@ Item {
                 opacity: 0.2
             }
 
-
             IconButton {
-                id: removeBtn
-                anchors.right: parent.right
+                id: addBtn
+                anchors.left: parent.left
                 anchors.bottom: parent.bottom
                 width: 32
                 height: 32
-                hoverIcon: "qrc:/res/removeHover.png"
-                pressIcon: "qrc:/res/removePress.png"
-                normalIcon: "qrc:/res/remove.png"
+                hoverIcon: "qrc:/res/addHover.png"
+                pressIcon: "qrc:/res/addPress.png"
+                normalIcon: "qrc:/res/add.png"
                 visible: wrapper.hovered && wrapper.ListView.isCurrentItem
 
                 onHoveredChanged: wrapper.hovered = hovered
-                onClicked: scheduleManager.removeSchedule(id)
+                onClicked: scheduleManager.addSchedule("",1)
             }
 
             IconButton {
                 id: editBtn
-                anchors.right: removeBtn.left
+                anchors.left: addBtn.right
                 anchors.bottom: parent.bottom
                 width: 32
                 height: 32
@@ -170,18 +205,18 @@ Item {
             }
 
             IconButton {
-                id: addBtn
-                anchors.right: editBtn.left
+                id: removeBtn
+                anchors.left: editBtn.right
                 anchors.bottom: parent.bottom
                 width: 32
                 height: 32
-                hoverIcon: "qrc:/res/addHover.png"
-                pressIcon: "qrc:/res/addPress.png"
-                normalIcon: "qrc:/res/add.png"
+                hoverIcon: "qrc:/res/removeHover.png"
+                pressIcon: "qrc:/res/removePress.png"
+                normalIcon: "qrc:/res/remove.png"
                 visible: wrapper.hovered && wrapper.ListView.isCurrentItem
 
                 onHoveredChanged: wrapper.hovered = hovered
-                onClicked: scheduleManager.addSchedule("",1)
+                onClicked: scheduleManager.removeSchedule(id)
             }
         }
     }

@@ -108,6 +108,10 @@ bool ScheduleManager::editSchedulePriority(const int schId, const int priority)
 
 void ScheduleManager::removeSchedule(const int schId)
 {
+    int flag = QMessageBox::question(nullptr, tr("提示"), tr("是否确认删除该项"), tr("确认"), tr("取消"));
+    if( flag != 0 )
+        return;
+
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
 //    bool success = query.exec(QString("DELETE FROM schedule WHERE id=%1")
@@ -125,6 +129,7 @@ void ScheduleManager::removeSchedule(const int schId)
     }
 
     m_pScheduleModel->removeScheduleWithId(schId);
+    emit scheduleRemoved();
 }
 
 void ScheduleManager::selectSubSchedule(const int index)
@@ -185,12 +190,16 @@ bool ScheduleManager::editSubScheduleName(const int subId, const QString name)
 
 void ScheduleManager::removeSubSchedule(const int subId, const int order)
 {
+    int flag = QMessageBox::question(nullptr, tr("提示"), tr("是否确认删除该项"), tr("确认"), tr("取消"));
+    if( flag != 0 )
+        return;
+
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
 //    bool success = query.exec(QString("DELETE FROM sub_schedule WHERE id=%1")
 //                              .arg(subId));
     bool success = query.exec(QString("DELETE sub_schedule,stage FROM sub_schedule "
-                                      "LEFT JOIN stage ON stage.sub_schedule_id=stage.id "
+                                      "LEFT JOIN stage ON stage.sub_schedule_id=sub_schedule.id "
                                       "WHERE sub_schedule.id=%1")
                               .arg(subId));
     QString errText = query.lastError().text();
@@ -204,6 +213,7 @@ void ScheduleManager::removeSubSchedule(const int subId, const int order)
     updateBehindSubScheduleOrder(order, subId, Minus);
 
     m_pSubScheduleModel->removeSubScheduleWithId(subId);
+    emit subScheduleRemoved();
 }
 
 void ScheduleManager::moveSubSchedule(const int fromId, const int toId)
@@ -241,7 +251,7 @@ void ScheduleManager::selectStage(const int index)
     m_nStageIndex = index;
 }
 
-void ScheduleManager::addStage(const QDateTime date, const QString title, const QString details, const QString result)
+void ScheduleManager::insertStage(const QDateTime date, const QString title, const QString details, const QString result)
 {
     QString addDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
     int subId = m_pSubScheduleModel->selectSubSchedule(m_nSubScheduleIndex)->id;
@@ -250,24 +260,28 @@ void ScheduleManager::addStage(const QDateTime date, const QString title, const 
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("INSERT INTO stage(sub_schedule_id, date, title, details,result,updated_at,created_at) "
-                                      "VALUES (%1,'%2','%3','%4','%5',%6,%7)")
+                                      "VALUES (%1,'%2','%3','%4','%5','%6','%7')")
                               .arg(subId).arg(date.toString("yyyy-MM-dd HH:mm:ss")).arg(title)
                               .arg(details).arg(result)
                               .arg(addDate).arg(addDate)
                               );
+    QString errText = query.lastError().text();
     query.exec("select @@IDENTITY");
     if( query.next() )
         stageId = query.value(0).toInt();
     ConnectionPool::closeConnection(db);
 
-    if( !success )
+    if( !success ) {
+        QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
+    }
 
     StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
     if( stageModel == nullptr )
         return;
 
-    stageModel->addStage(date,title,details,result,stageId);
+    int insertIndex = stageModel->insertStage(date,title,details,result,stageId);
+    emit stageAdded(insertIndex);
 }
 
 bool ScheduleManager::editStageDate(const int stageId, const QDateTime date)
@@ -366,8 +380,51 @@ bool ScheduleManager::editStageResule(const int stageId, const QString result)
     return true;
 }
 
+bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title, QString details, QString result)
+{
+    if( stageId == -1 ) {
+        QMessageBox::warning(nullptr, tr("错误!"), tr("错误的阶段数据!"));
+        return false;
+    }
+
+    int flag = QMessageBox::question(nullptr, tr("提示"), tr("是否确认应用修改"), tr("确认"), tr("取消"));
+    if( flag != 0 )
+        return false;
+
+    QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
+
+    QSqlDatabase db = ConnectionPool::openConnection();
+    QSqlQuery query(db);
+    bool success = query.exec(QString("UPDATE stage SET date='%1', title='%2', details='%3', result='%4', updated_at='%5' WHERE id=%6")
+                              .arg(date.toString( "yyyy-MM-dd HH:mm:ss" )).arg(title).arg(details)
+                              .arg(result).arg(updateDate).arg(stageId));
+    QString errText = query.lastError().text();
+    ConnectionPool::closeConnection(db);
+
+    if( !success ) {
+        QMessageBox::warning(nullptr, tr("错误!"), errText);
+        return false;
+    }
+
+    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
+    if( stageModel == nullptr )
+        return false;
+
+    stageModel->editStage(stageId, date, title, details, result);
+    return true;
+}
+
 void ScheduleManager::removeStage(const int stageId)
 {
+    if( stageId == -1 ) {
+        QMessageBox::warning(nullptr, tr("错误!"), tr("错误的阶段数据!"));
+        return;
+    }
+
+    int flag = QMessageBox::question(nullptr, tr("提示"), tr("是否确认删除该项"), tr("确认"), tr("取消"));
+    if( flag != 0 )
+        return;
+
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("DELETE FROM stage WHERE id=%1")
@@ -376,6 +433,7 @@ void ScheduleManager::removeStage(const int stageId)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
 
@@ -384,6 +442,13 @@ void ScheduleManager::removeStage(const int stageId)
         return;
 
     stageModel->removeStageWithId(stageId);
+    emit stageRemoved();
+}
+
+int ScheduleManager::messageBoxForQuestion(const QString showText)
+{
+    int flag = QMessageBox::question(nullptr, tr("提示"), showText, tr("确认"), tr("取消"));
+    return flag;
 }
 
 void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
@@ -396,7 +461,7 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
                        "stg.details details,stg.result result,stg.id stgId FROM sub_schedule sub "
                "LEFT JOIN stage stg ON stg.sub_schedule_id=sub.id "
                "WHERE sub.schedule_id=%1 "
-               "ORDER BY sub.order_no")
+               "ORDER BY sub.order_no ASC, stg.date ASC")
                .arg(scheduleId));
     while (query.next()) {
         QString name = query.value("name").toString();

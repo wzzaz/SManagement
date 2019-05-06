@@ -4,9 +4,10 @@ import QtQuick.Window 2.2
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import "Common.js" as Common
+import "../Common.js" as Common
 
 ApplicationWindow {
+    id: rootWindow
     visible: true
     width: 1240
     height: 700
@@ -33,6 +34,7 @@ ApplicationWindow {
     }
 
     TabView {
+        id: rootTabView
         style: tabViewStyle
         anchors.fill: parent
         Tab {
@@ -43,7 +45,7 @@ ApplicationWindow {
             title: "details"
             Rectangle {
                 width: 1000
-                height: 700
+                height: rootWindow.height - 60
                 SplitView {
                     width: parent.width
                     height: parent.height
@@ -52,43 +54,37 @@ ApplicationWindow {
                         id: schedleView
                         Layout.minimumWidth: 200
                         Layout.maximumWidth: 300
+
+                        function isValueBeEdited() {
+                            return stageEditor.valueBeEdited()
+                        }
                     }
 
                     SubScheduleView {
-//                        anchors.left: schedleView.right
-//                        anchors.leftMargin: 5
                         Layout.minimumWidth: 900
+                        height: parent.height
                         Layout.fillWidth: true
+                        onSigSelectStage: {
+                            stageEditor.showStage(date,title,details,result,id)
+                        }
+                        onClearStageEdit: {
+                            stageEditor.clearStage()
+                        }
+
+                        function isValueBeEdited() {
+                            return stageEditor.valueBeEdited()
+                        }
+                    }
+
+                    StageEditer {
+                        id: stageEditor
+                        height: parent.height
+                        Layout.minimumWidth: 300
+                        Layout.maximumWidth: 500
                     }
                 }
 
             }
         }
     }
-
-//    ListView {
-//        anchors.left: schedleView.right
-//        width: 180; height: 200
-
-//        model: subScheduleModel
-//        delegate: Item {
-//            Text {
-//                id: textComp
-//             text: name + ": "
-//             Component.onCompleted: {
-//                 console.log(index)
-//                 console.log(subScheduleModel.selectStageModel(index), index)
-//             }
-//            }
-//            ListView {
-//                anchors.left: textComp.right
-//                width: 80; height: 30
-//                model: subScheduleModel.selectStageModel(index)
-//                orientation: ListView.Horizontal
-//                delegate: Text {
-//                    text: details
-//                }
-//            }
-//        }
-//    }
 }
