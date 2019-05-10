@@ -65,8 +65,8 @@ public:
     void editName(const QString srcName, const QString newName);
     void editName(const QString name, const int id);
 
-    void addStage(const int index, QDateTime date, QString title, QString details, QString result, int id);
-    void addStage(const QString subName, QDateTime date, QString title, QString details, QString result, int id);
+    void addStage(const int index, QDateTime date, QString title, QString details, QString result, int status, int id);
+    void addStage(const QString subName, QDateTime date, QString title, QString details, QString result, int status, int id);
 
     Q_INVOKABLE StageModel *selectStageModel(const int index);
     //Q_INVOKABLE StageModel* stageModel(const int index) { return m_subScheduleData.at(index).stageModel; }

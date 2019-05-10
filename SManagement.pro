@@ -19,7 +19,8 @@ SOURCES += \
     model/ScheduleModel.cpp \
     model/SubScheduleModel.cpp \
     model/StageModel.cpp \
-    ScheduleManager.cpp
+    ScheduleManager.cpp \
+    Utils.cpp
 
 RESOURCES += management.qrc \
     js.qrc \
@@ -42,7 +43,8 @@ HEADERS += \
     ScheduleManager.h \
     model/ScheduleModel.h \
     model/SubScheduleModel.h \
-    model/StageModel.h
+    model/StageModel.h \
+    Utils.h
 
 #DISTFILES += \
 #    Common.js

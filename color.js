@@ -45,3 +45,17 @@ function stageSelectedColor() {
 function stageResultColor() {
     return "#FFFACD"
 }
+
+function stageStatusColor(status) {
+    switch(status)
+    {
+    case 1:
+        return doneStateColor()
+    case 2:
+        return unDoneStateColor()
+    case 3:
+        return nearPastDueColor()
+    case 4:
+        return waitingStateColor()
+    }
+}

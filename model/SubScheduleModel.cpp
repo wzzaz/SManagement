@@ -168,17 +168,17 @@ StageModel *SubScheduleModel::selectStageModel(const int index)
     return nullptr;
 }
 
-void SubScheduleModel::addStage(const int index, QDateTime date, QString title, QString details, QString result, int id)
+void SubScheduleModel::addStage(const int index, QDateTime date, QString title, QString details, QString result, int status, int id)
 {
     SubScheduleStruct *sub = m_subScheduleData.at(index);
-    sub->stageModel->addStage(date, title, details, result, id);
+    sub->stageModel->addStage(date, title, details, result, status, id);
 //    m_subScheduleData.replace(index, sub);
 }
 
-void SubScheduleModel::addStage(const QString subName, QDateTime date, QString title, QString details, QString result, int id)
+void SubScheduleModel::addStage(const QString subName, QDateTime date, QString title, QString details, QString result, int status, int id)
 {
     int index = NameSearchSubSchedule(subName);
-    addStage(index,date,title,details,result,id);
+    addStage(index,date,title,details,result,status,id);
 }
 
 bool SubScheduleModel::moveSubSchedule(const int fromId, const int toId)

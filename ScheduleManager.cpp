@@ -5,6 +5,12 @@
 
 #include <QMessageBox>
 
+static QString g_stage_time_stamp_diff  = QString("TIMESTAMPDIFF(HOUR,(SELECT CURRENT_TIMESTAMP()), stage.date)");
+static QString g_cur_time_stamp_diff    = QString("TIMESTAMPDIFF(HOUR,stage.date, (SELECT CURRENT_TIMESTAMP()))");
+static QString g_result_is_empty        = QString("CHAR_LENGTH(result) = 0");
+static QString g_sql_stage_status_value = QString("CASE WHEN (%1>=72) then 4 WHEN (%1>=0) AND (%1<72) THEN 3 WHEN (%2>0) AND (%3) THEN 2 ELSE 1 END")
+        .arg(g_stage_time_stamp_diff).arg(g_cur_time_stamp_diff).arg(g_result_is_empty);
+
 ScheduleManager::ScheduleManager(QObject *pScheduleModel, QObject *pSubScheduleModel, QObject *parent)
     : QObject(parent)
 
@@ -259,10 +265,10 @@ void ScheduleManager::insertStage(const QDateTime date, const QString title, con
 
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
-    bool success = query.exec(QString("INSERT INTO stage(sub_schedule_id, date, title, details,result,updated_at,created_at) "
+    bool success = query.exec(QString("INSERT INTO stage(sub_schedule_id, date, title, details,result,status_id,updated_at,created_at) "
                                       "VALUES (%1,'%2','%3','%4','%5','%6','%7')")
                               .arg(subId).arg(date.toString("yyyy-MM-dd HH:mm:ss")).arg(title)
-                              .arg(details).arg(result)
+                              .arg(details).arg(result).arg(3)
                               .arg(addDate).arg(addDate)
                               );
     QString errText = query.lastError().text();
@@ -284,102 +290,6 @@ void ScheduleManager::insertStage(const QDateTime date, const QString title, con
     emit stageAdded(insertIndex);
 }
 
-bool ScheduleManager::editStageDate(const int stageId, const QDateTime date)
-{
-    QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
-
-    QSqlDatabase db = ConnectionPool::openConnection();
-    QSqlQuery query(db);
-    bool success = query.exec(QString("UPDATE stage SET date='%1', updated_at='%2' WHERE id=%3")
-                              .arg(date.toString( "yyyy-MM-dd HH:mm:ss" )).arg(updateDate).arg(stageId));
-    QString errText = query.lastError().text();
-    ConnectionPool::closeConnection(db);
-
-    if( !success ) {
-        QMessageBox::warning(nullptr, tr("错误!"), errText);
-        return false;
-    }
-
-    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
-    if( stageModel == nullptr )
-        return false;
-
-    stageModel->editDate(date, stageId);
-    return true;
-}
-
-bool ScheduleManager::editStageTitle(const int stageId, const QString title)
-{
-    QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
-
-    QSqlDatabase db = ConnectionPool::openConnection();
-    QSqlQuery query(db);
-    bool success = query.exec(QString("UPDATE stage SET title='%1', updated_at='%2' WHERE id=%3")
-                              .arg(title).arg(updateDate).arg(stageId));
-    QString errText = query.lastError().text();
-    ConnectionPool::closeConnection(db);
-
-    if( !success ) {
-        QMessageBox::warning(nullptr, tr("错误!"), errText);
-        return false;
-    }
-
-    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
-    if( stageModel == nullptr )
-        return false;
-
-    stageModel->editTitle(title, stageId);
-    return true;
-}
-
-bool ScheduleManager::editStageDetails(const int stageId, const QString details)
-{
-    QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
-
-    QSqlDatabase db = ConnectionPool::openConnection();
-    QSqlQuery query(db);
-    bool success = query.exec(QString("UPDATE stage SET details='%1', updated_at='%2' WHERE id=%3")
-                              .arg(details).arg(updateDate).arg(stageId));
-    QString errText = query.lastError().text();
-    ConnectionPool::closeConnection(db);
-
-    if( !success ) {
-        QMessageBox::warning(nullptr, tr("错误!"), errText);
-        return false;
-    }
-
-    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
-    if( stageModel == nullptr )
-        return false;
-
-    stageModel->editDetails(details, stageId);
-    return true;
-}
-
-bool ScheduleManager::editStageResule(const int stageId, const QString result)
-{
-    QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
-
-    QSqlDatabase db = ConnectionPool::openConnection();
-    QSqlQuery query(db);
-    bool success = query.exec(QString("UPDATE stage SET result='%1', updated_at='%2' WHERE id=%3")
-                              .arg(result).arg(updateDate).arg(stageId));
-    QString errText = query.lastError().text();
-    ConnectionPool::closeConnection(db);
-
-    if( !success ) {
-        QMessageBox::warning(nullptr, tr("错误!"), errText);
-        return false;
-    }
-
-    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
-    if( stageModel == nullptr )
-        return false;
-
-    stageModel->editResult(result, stageId);
-    return true;
-}
-
 bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title, QString details, QString result)
 {
     if( stageId == -1 ) {
@@ -392,12 +302,14 @@ bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title
         return false;
 
     QString updateDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
+    int status = Utils::checkStageWorkStatus(date, result.isEmpty());
+    qDebug() << "ScheduleManager::editStage status=" << status;
 
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
-    bool success = query.exec(QString("UPDATE stage SET date='%1', title='%2', details='%3', result='%4', updated_at='%5' WHERE id=%6")
+    bool success = query.exec(QString("UPDATE stage SET date='%1', title='%2', details='%3', result='%4', status_id=%5, updated_at='%6' WHERE id=%7")
                               .arg(date.toString( "yyyy-MM-dd HH:mm:ss" )).arg(title).arg(details)
-                              .arg(result).arg(updateDate).arg(stageId));
+                              .arg(result).arg(status).arg(updateDate).arg(stageId));
     QString errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
 
@@ -410,7 +322,7 @@ bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title
     if( stageModel == nullptr )
         return false;
 
-    stageModel->editStage(stageId, date, title, details, result);
+    stageModel->editStage(stageId, date, title, details, result, status);
     return true;
 }
 
@@ -451,6 +363,23 @@ int ScheduleManager::messageBoxForQuestion(const QString showText)
     return flag;
 }
 
+bool ScheduleManager::updateStageWorkStatus()
+{
+
+    QSqlDatabase db = ConnectionPool::openConnection();
+    QSqlQuery query(db);
+    bool success = query.exec(QString("UPDATE stage SET status_id=%1").arg(g_sql_stage_status_value));
+    QString errText = query.lastError().text();
+    ConnectionPool::closeConnection(db);
+
+    if( !success ) {
+        QMessageBox::warning(nullptr, tr("错误!"), errText);
+        return false;
+    }
+
+    return true;
+}
+
 void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
 {
     m_pSubScheduleModel->clear();
@@ -458,7 +387,7 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     query.exec(QString("SELECT sub.name name,sub.id subId,stg.date date,stg.title,"
-                       "stg.details details,stg.result result,stg.id stgId FROM sub_schedule sub "
+                       "stg.details details,stg.result result,stg.id stgId, stg.status_id status FROM sub_schedule sub "
                "LEFT JOIN stage stg ON stg.sub_schedule_id=sub.id "
                "WHERE sub.schedule_id=%1 "
                "ORDER BY sub.order_no ASC, stg.date ASC")
@@ -472,9 +401,10 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
         QString title   = query.value("title").toString();
         QString details = query.value("details").toString();
         QString result  = query.value("result").toString();
+        int status      = query.value("status").toInt();
         int stageId     = query.value("stgId").toInt();
         if( date.isValid() && stageId > 0 )
-            m_pSubScheduleModel->addStage(name, date, title, details, result, stageId);
+            m_pSubScheduleModel->addStage(name, date, title, details, result, status, stageId);
 
         qDebug() << "unfoldSubScheduleAndStage name=" << name << stageId << date.isValid();
     }

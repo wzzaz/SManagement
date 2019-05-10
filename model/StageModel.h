@@ -5,18 +5,31 @@
 #include <QObject>
 #include <QDateTime>
 
+#include "Utils.h"
+
 typedef struct _stage {
     QDateTime dateTime;
     QString title;
     QString details;
     QString result;
+    int status;
     int id;
 
-    _stage(QDateTime d_date, QString s_title, QString s_details, QString s_result, int n_id = -1) {
+    _stage(QDateTime d_date, QString s_title, QString s_details, QString s_result, int n_id) {
         dateTime = d_date;
         title = s_title;
         details = s_details;
         result = s_result;
+        status = status_closeToExpire;
+        id = n_id;
+    }
+
+    _stage(QDateTime d_date, QString s_title, QString s_details, QString s_result, int n_status, int n_id) {
+        dateTime = d_date;
+        title = s_title;
+        details = s_details;
+        result = s_result;
+        status = n_status;
         id = n_id;
     }
 
@@ -24,6 +37,7 @@ typedef struct _stage {
         title = "";
         details = "";
         result = "";
+        status = status_closeToExpire;
         id = -1;
     }
 } StageStruct;
@@ -37,6 +51,7 @@ public:
         TitleRole,
         DetailRole,
         ResultRole,
+        StatusRole,
         IdRole
     };
 
@@ -49,26 +64,14 @@ public:
     bool setData(const QModelIndex &index, const QVariant &value, int role);
     virtual QHash<int, QByteArray> roleNames() const;
 
-    void addStage(QDateTime date, QString title, QString details, QString result, int id);
+    void addStage(QDateTime date, QString title, QString details, QString result, int status, int id);
 
     int insertStage(QDateTime date, QString title, QString details, QString result, int id);
 
     void removeStage(const int index);
     void removeStageWithId(const int id);
 
-    void editDate(const int index,const QDateTime date);
-    void editDate(const QDateTime date, const int id);
-
-    void editTitle(const int index, const QString title);
-    void editTitle(const QString title, const int id);
-
-    void editDetails(const int index, const QString details);
-    void editDetails(const QString details, const int id);
-
-    void editResult(const int index, const QString result);
-    void editResult(const QString result, const int id);
-
-    void editStage(const int id, const QDateTime date, const QString title, const QString details, const QString result);
+    void editStage(const int id, const QDateTime date, const QString title, const QString details, const QString result, const int status);
 
     void clear();
 

@@ -11,7 +11,7 @@ Item {
 
     function isValueBeEdited(){}
 
-    function __forceSelectStage() {
+    function __ifForceSelectStage() {
         if( isValueBeEdited() )
         {
             var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
@@ -66,7 +66,7 @@ Item {
     Connections {
         target: scheduleManager
         onScheduleAdded: {
-            if( __forceSelectStage() )
+            if( __ifForceSelectStage() )
                 goEditAddedSchedule(index)
         }
         onScheduleRemoved: {
@@ -106,7 +106,7 @@ Item {
                 preventStealing: true
                 propagateComposedEvents: true
                 onClicked: {
-                    if( __forceSelectStage() )
+                    if( __ifForceSelectStage() )
                     {
                         wrapper.ListView.view.currentIndex = index
                     }

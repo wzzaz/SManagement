@@ -17,7 +17,7 @@ Item {
 
     function isValueBeEdited(){}
 
-    function __forceSelectStage() {
+    function __ifForceSelectStage() {
         if( isValueBeEdited() )
         {
             var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
@@ -104,13 +104,13 @@ Item {
     Connections {
         target: scheduleManager
         onSubScheduleAdded: {
-            if( __forceSelectStage() )
+            if( __ifForceSelectStage() )
             {
                 goEditAddedSubSchedule(index)
             }
         }
         onStageAdded: {
-            if( __forceSelectStage() )
+            if( __ifForceSelectStage() )
             {
                 goSelectAddedStage(index)
             }
@@ -178,7 +178,7 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    if( curChecked || __forceSelectStage() )
+                    if( curChecked || __ifForceSelectStage() )
                     {
                         wrapper.selectCurrentSubSchedule()
                     }
@@ -215,7 +215,7 @@ Item {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if( curChecked || __forceSelectStage() )
+                        if( curChecked || __ifForceSelectStage() )
                         {
                             wrapper.selectCurrentSubSchedule()
                         }
@@ -446,7 +446,7 @@ Item {
                         MouseArea {
                             anchors.fill: parent
                             onClicked: {
-                                if( stageChecked || __forceSelectStage() )
+                                if( stageChecked || __ifForceSelectStage() )
                                 {
                                     wrapper.selectCurrentSubSchedule()
                                     stageWrapper.__view.currentIndex = index
@@ -472,7 +472,8 @@ Item {
                                     id: stateRec
                                     width: 15
                                     height: parent.height
-                                    color: {
+                                    color: Color.stageStatusColor(status)
+                                    /*{
                                         if( Common.overDateForNow(date) ) {
                                             if( Common.isEmptyString(result) ) {
                                                 return Color.unDoneStateColor()
@@ -486,7 +487,7 @@ Item {
                                                 return Color.waitingStateColor()
                                             }
                                         }
-                                    }
+                                    }*/
                                         /* Common.overDateForNow(date) ? (Common.isEmptyString(result) ? Color.unDoneStateColor() : Color.doneStateColor())
                                                                        : Color.waitingStateColor() */
                                     anchors.right: parent.right
