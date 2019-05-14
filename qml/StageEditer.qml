@@ -25,7 +25,7 @@ Item {
         details = pdetails
         result = presult
 
-        dateEdit.text = Common.dateFormat("yyyy-MM-dd hh:mm:ss",date)
+        dateEdit.text = Common.dateFormat("yyyy-MM-dd hh:mm:ss",pdate)
         titleEdit.text = ptitle
         detailsEdit.text = pdetails
         resultEdit.text = presult
@@ -187,8 +187,8 @@ Item {
         pressIcon: "qrc:/res/updateStagePress.png"
         normalIcon: "qrc:/res/updateStage.png"
         onClicked: {
-            if( scheduleManager.editStage(__id, dateEdit.text, titleEdit.text, detailsEdit.text, resultEdit.text) ) {
-                showStage(dateEdit.text, titleEdit.text, detailsEdit.text, resultEdit.text)
+            if( scheduleManager.editStage(__id, new Date(dateEdit.text), titleEdit.text, detailsEdit.text, resultEdit.text) ) {
+                showStage(new Date(dateEdit.text), titleEdit.text, detailsEdit.text, resultEdit.text)
             }
 
         }

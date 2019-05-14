@@ -3,6 +3,7 @@
 #include "model/SubScheduleModel.h"
 #include "data/ConnectionPool.h"
 
+#include <QStringList>
 #include <QMessageBox>
 
 static QString g_stage_time_stamp_diff  = QString("TIMESTAMPDIFF(HOUR,(SELECT CURRENT_TIMESTAMP()), stage.date)");
@@ -11,12 +12,18 @@ static QString g_result_is_empty        = QString("CHAR_LENGTH(result) = 0");
 static QString g_sql_stage_status_value = QString("CASE WHEN (%1>=72) then 4 WHEN (%1>=0) AND (%1<72) THEN 3 WHEN (%2>0) AND (%3) THEN 2 ELSE 1 END")
         .arg(g_stage_time_stamp_diff).arg(g_cur_time_stamp_diff).arg(g_result_is_empty);
 
+#define STAGE_CLOCK_TIME 3600000    // 1 hour
+
 ScheduleManager::ScheduleManager(QObject *pScheduleModel, QObject *pSubScheduleModel, QObject *parent)
     : QObject(parent)
 
 {
     m_pScheduleModel    = static_cast<ScheduleModel*>(pScheduleModel);
     m_pSubScheduleModel = static_cast<SubScheduleModel*>(pSubScheduleModel);
+
+    updateStageWorkStatus();
+    clockInitialize();
+    statusFilterInitialize();
 }
 
 ScheduleManager::~ScheduleManager()
@@ -31,7 +38,7 @@ void ScheduleManager::initialize()
 
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
-    query.exec("SELECT * FROM schedule");
+    query.exec("SELECT * FROM schedule ORDER BY created_at DESC");
     while (query.next()) {
 
         QString name = query.value("name").toString();
@@ -45,7 +52,6 @@ void ScheduleManager::initialize()
 void ScheduleManager::selectSchedule(const int index)
 {
     m_nScheduleIndex = index;
-//    int id = m_pScheduleModel->data(index, ScheduleModel::IdRole).toInt();
     int id = m_pScheduleModel->selectSchedule(index).id;
     unfoldSubScheduleAndStage(id);
 }
@@ -68,8 +74,8 @@ void ScheduleManager::addSchedule(const QString name, const int priority)
     if( !success )
         return;
 
-    m_pScheduleModel->addSchedule(name, priority, id);
-    emit scheduleAdded(m_pScheduleModel->size() - 1);
+    m_pScheduleModel->insertSchedule(name, priority, id);
+    emit scheduleAdded(0);
 }
 
 bool ScheduleManager::editScheduleName(const int schId, const QString name)
@@ -266,7 +272,7 @@ void ScheduleManager::insertStage(const QDateTime date, const QString title, con
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("INSERT INTO stage(sub_schedule_id, date, title, details,result,status_id,updated_at,created_at) "
-                                      "VALUES (%1,'%2','%3','%4','%5','%6','%7')")
+                                      "VALUES (%1,'%2','%3','%4','%5',%6,'%7','%8')")
                               .arg(subId).arg(date.toString("yyyy-MM-dd HH:mm:ss")).arg(title)
                               .arg(details).arg(result).arg(3)
                               .arg(addDate).arg(addDate)
@@ -365,7 +371,6 @@ int ScheduleManager::messageBoxForQuestion(const QString showText)
 
 bool ScheduleManager::updateStageWorkStatus()
 {
-
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("UPDATE stage SET status_id=%1").arg(g_sql_stage_status_value));
@@ -377,7 +382,23 @@ bool ScheduleManager::updateStageWorkStatus()
         return false;
     }
 
+    selectSchedule(m_nScheduleIndex);
     return true;
+}
+
+void ScheduleManager::setStatusFilter(int status, bool checked)
+{
+    m_statusFilter.insert(status,checked);
+    selectSchedule(m_nScheduleIndex);
+}
+
+void ScheduleManager::slot_updateStageWorkStatus()
+{
+    emit stageUpdateStatus(true);
+
+    updateStageWorkStatus();
+
+    emit stageUpdateStatus(false);
 }
 
 void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
@@ -389,9 +410,9 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
     query.exec(QString("SELECT sub.name name,sub.id subId,stg.date date,stg.title,"
                        "stg.details details,stg.result result,stg.id stgId, stg.status_id status FROM sub_schedule sub "
                "LEFT JOIN stage stg ON stg.sub_schedule_id=sub.id "
-               "WHERE sub.schedule_id=%1 "
+               "WHERE sub.schedule_id=%1 and stg.status_id in %2 "
                "ORDER BY sub.order_no ASC, stg.date ASC")
-               .arg(scheduleId));
+               .arg(scheduleId).arg(statusFilterToSQLCode()));
     while (query.next()) {
         QString name = query.value("name").toString();
         int subId    = query.value("subId").toInt();
@@ -406,7 +427,7 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
         if( date.isValid() && stageId > 0 )
             m_pSubScheduleModel->addStage(name, date, title, details, result, status, stageId);
 
-        qDebug() << "unfoldSubScheduleAndStage name=" << name << stageId << date.isValid();
+        // qDebug() << "unfoldSubScheduleAndStage name=" << name << stageId << date.isValid();
     }
     QString errText = query.lastError().text();
     qDebug() << "unfoldSubScheduleAndStage err=" << errText;
@@ -434,4 +455,37 @@ void ScheduleManager::updateBehindSubScheduleOrder(const int startOrder, const i
     if( !success ) {
         QMessageBox::warning(nullptr, tr("错误!"), errText);
     }
+}
+
+void ScheduleManager::clockInitialize()
+{
+    m_pStatusManagerClock = new QTimer(this);
+
+    connect(m_pStatusManagerClock, SIGNAL(timeout()), this, SLOT(slot_updateStageWorkStatus()));
+
+    m_pStatusManagerClock->setInterval(STAGE_CLOCK_TIME);
+    m_pStatusManagerClock->setSingleShot(false);
+    m_pStatusManagerClock->start();
+}
+
+void ScheduleManager::statusFilterInitialize()
+{
+    m_statusFilter.clear();
+
+    m_statusFilter.insert(status_done,true);
+    m_statusFilter.insert(status_undone,true);
+    m_statusFilter.insert(status_closeToExpire,true);
+    m_statusFilter.insert(status_waiting,true);
+}
+
+QString ScheduleManager::statusFilterToSQLCode()
+{
+    QStringList filters;
+    QMap<int,bool>::const_iterator i;
+    for (i = m_statusFilter.constBegin(); i != m_statusFilter.constEnd(); ++i) {
+        if ( i.value() )
+            filters << QString::number(i.key());
+    }
+
+    return QString("(%1)").arg(filters.join(","));
 }

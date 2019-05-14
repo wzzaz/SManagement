@@ -98,6 +98,13 @@ void ScheduleModel::addSchedule(const QString name, const int priority, const in
     endInsertRows();
 }
 
+void ScheduleModel::insertSchedule(const QString name, const int priority, const int id)
+{
+    beginInsertRows(QModelIndex(), 0, 0);
+    m_scheduleData.insert(0, ScheduleStruct(name,priority,id));
+    endInsertRows();
+}
+
 void ScheduleModel::removeSchedule(const QString name)
 {
     int index = NameSearchSchedule(name);

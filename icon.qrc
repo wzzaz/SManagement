@@ -28,5 +28,8 @@
         <file>res/removeStage.png</file>
         <file>res/removeStageHover.png</file>
         <file>res/removeStagePress.png</file>
+        <file>res/sync.png</file>
+        <file>res/syncHover.png</file>
+        <file>res/syncPress.png</file>
     </qresource>
 </RCC>

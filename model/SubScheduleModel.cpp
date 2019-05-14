@@ -93,8 +93,7 @@ bool SubScheduleModel::addSubSchedule(const QString name, const int id)
     beginInsertRows(QModelIndex(), m_subScheduleData.size(), m_subScheduleData.size());
     SubScheduleStruct *sub = new SubScheduleStruct(name,id);
     sub->stageModel = new StageModel();
-//    sub.stageModel = QSharedPointer<StageModel>(new StageModel());
-    qDebug() << "SubScheduleModel::addSubSchedule " << sub->stageModel;
+    // qDebug() << "SubScheduleModel::addSubSchedule " << sub->stageModel;
     m_subScheduleData.append(sub);
     endInsertRows();
 

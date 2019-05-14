@@ -135,7 +135,7 @@ Item {
     }
 
     function goSelectAddedStage(index) {
-        view.currentItem.selectAddedStageAction(index)
+        view.currentItem.selectStageIndexAction(index)
     }
 
     Component {
@@ -163,7 +163,8 @@ Item {
                     stageView.currentItem.selectStageAction()
             }
 
-            function selectAddedStageAction(index) {
+            function selectStageIndexAction(index) {
+                stageView.__needEmitSig = true
                 stageView.currentIndex = index
                 selectCurStageAction()
             }
@@ -396,6 +397,8 @@ Item {
                     delegate: stageDelegate
                     property int subScheduleIndex: index
 
+                    property bool __needEmitSig: false
+
                     add: Transition {
                         NumberAnimation { properties: "x,y"; duration: 200 }
                     }
@@ -414,9 +417,13 @@ Item {
                     ScrollBar.vertical: ScrollBar {}
 
                     onCurrentIndexChanged: {
+                        if( !__needEmitSig )
+                            return
+
                         clearStageEdit()
                         if(currentItem)
                             currentItem.selectStageAction()
+                        __needEmitSig = false
                     }
                     onCountChanged: {
                         if(!__stageBeRemoved)
@@ -449,6 +456,7 @@ Item {
                                 if( stageChecked || __ifForceSelectStage() )
                                 {
                                     wrapper.selectCurrentSubSchedule()
+                                    stageWrapper.__view.__needEmitSig = true
                                     stageWrapper.__view.currentIndex = index
                                 }
                             }

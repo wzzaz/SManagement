@@ -14,13 +14,84 @@ ApplicationWindow {
     title: qsTr("SManagement")
     visibility: Window.Maximized
 
+    menuBar: MenuBar {
+        Menu {
+            title: "File"
+            MenuItem { text: "Open..." }
+            MenuItem { text: "Close" }
+        }
+
+        Menu {
+            title: "Edit"
+            MenuItem { text: "Cut" }
+            MenuItem { text: "Copy" }
+            MenuItem { text: "Paste" }
+        }
+    }
+
+    toolBar:ToolBar {
+        ExclusiveGroup { id: toolBarGroup }
+        HomeToolArea {
+            id: homeToolBar
+            anchors.fill: parent
+            checked: true
+            exclusiveGroup: toolBarGroup
+        }
+        DetailsToolArea {
+            id: detailsToolBar
+            anchors.fill: parent
+            exclusiveGroup: toolBarGroup
+        }
+        Connections {
+            target: rootTabView
+            onCurrentIndexChanged: {
+                if (rootTabView.currentIndex === 0)
+                    homeToolBar.checked = true
+                else
+                   detailsToolBar.checked = true
+            }
+        }
+    }
+
+    statusBar: StatusBar {
+        id: statisBar
+        implicitWidth: parent.width
+        property string status
+        RowLayout {
+            anchors.fill: parent
+            IconButton {
+                width: 32
+                height: 32
+                hoverIcon: "qrc:/res/syncHover.png"
+                pressIcon: "qrc:/res/syncPress.png"
+                normalIcon: "qrc:/res/sync.png"
+                onClicked: scheduleManager.updateStageWorkStatus()
+            }
+            Label { text: statisBar.status }
+            Item { Layout.fillWidth: true }
+        }
+    }
+
+//    Connections {
+//        target: scheduleManager
+//        onStageUpdateStatus: {
+//            console.log("onStageUpdateStatus updating=",updating)
+//            if( updating ) {
+//                rootWindow.statusBar.visible = true
+//                rootWindow.statusBar.status = "updating"
+//            } else {
+//                rootWindow.statusBar.status = "done"
+//            }
+//        }
+//    }
+
     Component {
         id: tabViewStyle
         TabViewStyle {
             tab: Rectangle {
                 implicitWidth: 80
                 implicitHeight: 60
-                border.color: "steelblue"
+//                border.color: "steelblue"
                 Image {
                     anchors.centerIn: parent
                     width: 48
@@ -37,6 +108,7 @@ ApplicationWindow {
         id: rootTabView
         style: tabViewStyle
         anchors.fill: parent
+        tabPosition: Qt.BottomEdge
         Tab {
             title: "home"
             Rectangle {}
@@ -45,7 +117,8 @@ ApplicationWindow {
             title: "details"
             Rectangle {
                 width: 1000
-                height: rootWindow.height - 60
+                anchors.top: parent.top
+                anchors.bottom: parent.bottom
                 SplitView {
                     width: parent.width
                     height: parent.height

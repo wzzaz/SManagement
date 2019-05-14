@@ -5,5 +5,8 @@
         <file>qml/ScheduleView.qml</file>
         <file>qml/StageEditer.qml</file>
         <file>qml/SubScheduleView.qml</file>
+        <file>qml/DetailsToolArea.qml</file>
+        <file>qml/HomeToolArea.qml</file>
+        <file>qml/StatusCheckBox.qml</file>
     </qresource>
 </RCC>

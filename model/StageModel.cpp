@@ -10,7 +10,6 @@ StageModel::StageModel(QObject *parent)
 StageModel::~StageModel()
 {
     m_stageData.clear();
-    qDebug() << "~StageModel()" << this;
 }
 
 int StageModel::rowCount(const QModelIndex &parent) const
@@ -130,7 +129,6 @@ void StageModel::removeStageWithId(const int id)
 void StageModel::editStage(const int id, const QDateTime date, const QString title, const QString details, const QString result, const int status)
 {
     int index = IdSearchStage(id);
-    qDebug() << "StageModel::editStage index=" << index << m_stageData.size();
     if ( index >= 0 && index < m_stageData.size() ) {
         StageStruct stage = m_stageData.at(index);
         stage.dateTime = date;
@@ -147,7 +145,6 @@ void StageModel::editStage(const int id, const QDateTime date, const QString tit
 void StageModel::clear()
 {
     beginResetModel();
-    qDebug() << "StageModel::clear()" << m_stageData.size();
     m_stageData.clear();
     endResetModel();
 }

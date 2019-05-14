@@ -43,6 +43,8 @@ public:
 
     void addSchedule(const QString name, const int priority, const int id);
 
+    void insertSchedule(const QString name, const int priority, const int id);
+
     void removeSchedule(const QString name);
     void removeSchedule(const int index);
     void removeScheduleWithId(const int id);

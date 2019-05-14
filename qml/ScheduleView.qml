@@ -34,6 +34,7 @@ Item {
         height: parent.height
         model: scheduleModel
         delegate: scheduleDelegate
+
         add: Transition {
             NumberAnimation { properties: "x,y"; duration: 200 }
         }

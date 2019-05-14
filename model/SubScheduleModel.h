@@ -26,9 +26,7 @@ typedef struct _subSchedule {
         stageModel = nullptr;
     }
     ~_subSchedule() {
-        qDebug() << "~_subSchedule() " << this << name;
         if( stageModel != nullptr ) {
-            qDebug() << "parent delete";
             delete stageModel;
             stageModel = nullptr;
         }

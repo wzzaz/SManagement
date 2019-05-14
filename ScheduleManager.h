@@ -1,6 +1,8 @@
 #ifndef SCHEDULEMANAGER_H
 #define SCHEDULEMANAGER_H
 
+#include <QMap>
+#include <QTimer>
 #include <QObject>
 #include <QVector>
 #include <QDateTime>
@@ -59,6 +61,11 @@ public:
 
     Q_INVOKABLE bool updateStageWorkStatus();
 
+    Q_INVOKABLE void setStatusFilter(int status, bool checked);
+
+public slots:
+    void slot_updateStageWorkStatus();
+
 signals:
     void scheduleAdded(int index);
     void subScheduleAdded(int index);
@@ -70,13 +77,21 @@ signals:
 
     void subScheduleReset();
 
+    void stageUpdateStatus(bool updating);
+
 private:
     enum {
         Add,
         Minus
     };
     void unfoldSubScheduleAndStage(const int scheduleId);
+
     void updateBehindSubScheduleOrder(const int startOrder,const int unChangeId, const int type);
+
+    void clockInitialize();
+
+    void statusFilterInitialize();
+    QString statusFilterToSQLCode();
 
 private:
 
@@ -86,6 +101,10 @@ private:
     int m_nScheduleIndex;
     int m_nSubScheduleIndex;
     int m_nStageIndex;
+
+    QTimer *m_pStatusManagerClock;
+
+    QMap<int, bool> m_statusFilter;
 };
 
 #endif // SCHEDULEMANAGER_H
