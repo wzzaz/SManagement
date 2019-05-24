@@ -1,5 +1,6 @@
 import QtQuick 2.12
 import QtQuick.Controls 2.5
+import QtQuick.Controls.Material 2.12
 import "../size.js" as Size
 import "../color.js" as Color
 import "../Common.js" as Common
@@ -17,7 +18,7 @@ Item {
 
     function isValueBeEdited(){}
 
-    function __ifForceSelectStage() {
+    function __isForceSelectStage() {
         if( isValueBeEdited() )
         {
             var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
@@ -36,11 +37,17 @@ Item {
 
     ListView {
         id: view
-        width: parent.width
-        height: parent.height
+//        width: parent.width
+//        height: parent.height
+        anchors.fill: parent
+        anchors.margins: 5
         model: subScheduleModel
         delegate: subScheduleDelegate
         visible: count > 0
+        spacing: 8
+        highlightFollowsCurrentItem: true
+        highlightMoveDuration: 500
+
 
         property int readySwapFromId: -1
 
@@ -104,13 +111,13 @@ Item {
     Connections {
         target: scheduleManager
         onSubScheduleAdded: {
-            if( __ifForceSelectStage() )
+            if( __isForceSelectStage() )
             {
                 goEditAddedSubSchedule(index)
             }
         }
         onStageAdded: {
-            if( __ifForceSelectStage() )
+            if( __isForceSelectStage() )
             {
                 goSelectAddedStage(index)
             }
@@ -123,9 +130,21 @@ Item {
         onSubScheduleRemoved: {
             __subScheduleBeRemoved = true
         }
-
         onStageRemoved: {
             __stageBeRemoved = true
+        }
+        onJumpToSubSchedule: {
+            if( __isForceSelectStage() ) {
+                view.currentIndex = index
+                scheduleManager.selectStageWithId(stageId)
+            }
+        }
+        onJumpToStage: {
+            if( __isForceSelectStage() )
+            {
+                if(view.currentItem)
+                    view.currentItem.selectStageIndexAction(index)
+            }
         }
     }
 
@@ -140,25 +159,30 @@ Item {
 
     Component {
         id: subScheduleDelegate
-        Rectangle {
+        Pane {
             id: wrapper
             width: parent.width
-            height: 190
+            height:  subScheduleTitle.height + stageRec.height + padding * 2 + 8
+            Material.elevation: 6
+            Material.background: Color.subScheduleBackground()
+//            color: Material.color(Material.Red)
+//            radius: 5
             property var __view: wrapper.ListView.view
-            property bool hovered: false
+//            property bool hovered: false
             property bool editing: false
             property bool readySwap: __view.readySwapFromId === id
             property bool curChecked: __view.currentIndex === index
 
             function editNameAction() {
                 if( wrapper.editing ) {
-                    textInput.finishEditName()
+                    titleField.finishEditName()
                 } else {
-                    textInput.goEditName(name)
+                    titleField.goEditName(name)
                 }
             }
 
             function selectCurStageAction() {
+                selectCurrentSubSchedule()
                 if(stageView.currentItem)
                     stageView.currentItem.selectStageAction()
             }
@@ -179,87 +203,86 @@ Item {
                 anchors.fill: parent
                 hoverEnabled: true
                 onClicked: {
-                    if( curChecked || __ifForceSelectStage() )
+                    if( curChecked || __isForceSelectStage() )
                     {
                         wrapper.selectCurrentSubSchedule()
                     }
                 }
-                onEntered: wrapper.hovered = true
-                onExited: wrapper.hovered = false
+//                onEntered: wrapper.hovered = true
+//                onExited: wrapper.hovered = false
             }
 
             Rectangle {
                 id: swapSelect
                 width: 10
-                height: Size.subScheduleHeight
-                anchors.left: wrapper.left
-                anchors.leftMargin: 3
-                anchors.verticalCenter: wrapper.verticalCenter
+                height: wrapper.height - wrapper.padding
+                anchors.left: parent.left
+                anchors.leftMargin: 0
+                anchors.verticalCenter: parent.verticalCenter
                 radius: 2
-                color: "#63B8FF"
+                color: wrapper.Material.accent //"#63B8FF"
                 visible: readySwap
             }
 
             Rectangle {
                 id: subScheduleTitle
-                width: Size.subScheduleHeight
-                height: Size.subScheduleHeight
-                anchors.left: wrapper.__view.readyForSwap ? swapSelect.right : wrapper.left
-                anchors.leftMargin: 3
-                anchors.verticalCenter: wrapper.verticalCenter
-                radius: 2
-                color: Color.sNavajoWhite_Half()
-                opacity: wrapper.hovered ? 0.7 : 1
+                height: 35
+                anchors.left: wrapper.__view.readyForSwap ? swapSelect.right : parent.left
+                anchors.right: parent.right
+//                anchors.leftMargin: 3
+//                anchors.verticalCenter: wrapper.verticalCenter
+//                radius: 2
+                color: "transparent"// Color.primary() // Color.sNavajoWhite_Half()
+//                opacity: wrapper.hovered ? 0.7 : 1
                 enabled: !wrapper.__view.readyForSwap
 
                 MouseArea {
                     anchors.fill: parent
                     hoverEnabled: true
                     onClicked: {
-                        if( curChecked || __ifForceSelectStage() )
+                        if( curChecked || __isForceSelectStage() )
                         {
                             wrapper.selectCurrentSubSchedule()
                         }
                     }
-                    onEntered: wrapper.hovered = true
-                    onExited: wrapper.hovered = false
-                }
+//                    onEntered: wrapper.hovered = true
+//                    onExited: wrapper.hovered = false
+                }                
+
                 Text {
-                    anchors.centerIn: parent
-//                    anchors.left: parent.left
-//                    anchors.right: parent.right
-//                    anchors.leftMargin: 5
-//                    anchors.rightMargin: 5
-                    width: parent.width - 10
-                    text: name
-                    visible: !wrapper.editing
-                    wrapMode: Text.WordWrap
+                    id: titleFlag
+                    width: 5
+                    anchors.left: parent.left
+                    anchors.top: parent.top
+                    anchors.topMargin: 3
+                    text: qsTr("•")
                 }
 
-                TextInput {
-                    id: textInput
-                    anchors.centerIn: parent
+                TextField {
+                    id: titleField
                     anchors.left: parent.left
+                    anchors.leftMargin: 15
                     anchors.right: parent.right
-                    anchors.leftMargin: 5
-                    anchors.rightMargin: 5
-                    selectByMouse: true
-                    selectionColor: Color.selectionColor()
-                    font.bold: true
-                    font.italic: true
-                    visible: wrapper.editing
+                    anchors.verticalCenter: parent.verticalCenter
+                    text: name
                     wrapMode: Text.WordWrap
-                    onAccepted: {
-                        finishEditName()
-                    }
+                    selectByMouse: wrapper.editing
+                    readOnly: !wrapper.editing
+                    font.italic: wrapper.editing
+                    placeholderText: qsTr("请输入子计划标题...")
+
+                    onAccepted: finishEditName()
+
                     onFocusChanged: {
-                        console.log(focus,active,activeFocus)
                         if( !focus ) {
                             finishEditName()
                         }
                     }
+
                     onActiveFocusChanged: {
-                        console.log("activeFocus:",activeFocus)
+                        if( !activeFocus ) {
+                            finishEditName()
+                        }
                     }
 
                     function goEditName(val) {
@@ -278,8 +301,8 @@ Item {
 
                 IconButton {
                     id: addBtn
-                    anchors.left: parent.left
-                    anchors.bottom: parent.bottom
+                    anchors.right: editBtn.left
+                    anchors.bottom: removeBtn.bottom
                     anchors.leftMargin: 32
                     width: 32
                     height: 32
@@ -288,14 +311,14 @@ Item {
                     normalIcon: "qrc:/res/add.png"
                     visible: wrapper.hovered && !wrapper.__view.readyForSwap
 
-                    onHoveredChanged:  wrapper.hovered = hovered
+//                    onHoveredChanged:  wrapper.hovered = hovered
                     onClicked: scheduleManager.addSubSchedule("",index + 1)
                 }
 
                 IconButton {
                     id: editBtn
-                    anchors.left: addBtn.right
-                    anchors.bottom: parent.bottom
+                    anchors.right: removeBtn.left
+                    anchors.bottom: removeBtn.bottom
                     width: 32
                     height: 32
                     hoverIcon: "qrc:/res/editHover.png"
@@ -303,14 +326,17 @@ Item {
                     normalIcon: "qrc:/res/edit.png"
                     visible: wrapper.hovered && !wrapper.__view.readyForSwap
 
-                    onHoveredChanged: wrapper.hovered = hovered
+//                    onHoveredChanged: wrapper.hovered = hovered
                     onClicked: wrapper.editNameAction()
                 }
 
                 IconButton {
                     id: removeBtn
-                    anchors.left: editBtn.right
+                    anchors.right: parent.right
                     anchors.bottom: parent.bottom
+                    anchors.bottomMargin: 7
+//                    anchors.verticalCenter: parent.verticalCenter
+                    anchors.rightMargin: 10
                     width: 32
                     height: 32
                     hoverIcon: "qrc:/res/removeHover.png"
@@ -318,15 +344,17 @@ Item {
                     normalIcon: "qrc:/res/remove.png"
                     visible: wrapper.hovered && !wrapper.__view.readyForSwap
 
-                    onHoveredChanged: wrapper.hovered = hovered
+//                    onHoveredChanged: wrapper.hovered = hovered
                     onClicked: scheduleManager.removeSubSchedule(id,index)
                 }
             }
 
             IconButton {
                 id: swapBtn
-                anchors.left: subScheduleTitle.left
+                anchors.right: subScheduleTitle.right
                 anchors.bottom: subScheduleTitle.bottom
+                anchors.bottomMargin: 7
+                anchors.rightMargin: 32*3 + 10
                 width: 32
                 height: 32
                 hoverIcon: "qrc:/res/swapHover.png"
@@ -334,7 +362,7 @@ Item {
                 normalIcon: "qrc:/res/swap.png"
                 visible: wrapper.hovered
 
-                onHoveredChanged: wrapper.hovered = hovered
+//                onHoveredChanged: wrapper.hovered = hovered
                 onClicked: {
                     if( wrapper.__view.readySwapFromId === -1 ) {
                         wrapper.__view.__fromSwapIndex = index
@@ -353,48 +381,70 @@ Item {
 
             Rectangle {
                 id: stageRec
-                anchors.left: subScheduleTitle.right
-                anchors.right: wrapper.right
-                anchors.verticalCenter: subScheduleTitle.verticalCenter
-                height: Size.subScheduleHeight
-                color: Color.sFloralWhite()
+                anchors.left: wrapper.__view.readyForSwap ? swapSelect.right : parent.left
+                anchors.right: parent.right
+                anchors.top: subScheduleTitle.bottom
+                height: Math.max(stageView.height+8, 40)
+//                anchors.bottom: parent.bottom
+//                anchors.verticalCenter: subScheduleTitle.verticalCenter
+//                height: Size.subScheduleHeight
+                color: "transparent" //Color.sFloralWhite()
                 enabled: !wrapper.__view.readyForSwap
 
-                Rectangle {
-                    anchors.left: parent.left
-                    height: parent.height
-                    width: 5
-                    color: Color.sNavajoWhite_Half()
-                    opacity: 0.5
-                }
+//                Rectangle {
+//                    anchors.left: parent.left
+//                    height: parent.height
+//                    width: 5
+//                    color: Color.sNavajoWhite_Half()
+//                    opacity: 0.5
+//                }
 
                 Button {
                     anchors.left: parent.left
-                    anchors.leftMargin: 6
+//                    anchors.leftMargin: 6
                     width: 40
-                    height: parent.height
+                    height: width
                     icon.source: "qrc:/res/add.png"
                     icon.width: 32
                     icon.height: 32
+                    visible: wrapper.hovered
+
+                    highlighted: true
+//                    Material.accent: Material.Orange
                     onClicked: {
                         wrapper.selectCurrentSubSchedule()
                         scheduleManager.insertStage(new Date, "", "", "")
                     }
                 }
 
-                GridView {
+                ListView {
                     id: stageView
-                    height: stageRec.height
+//                    height: parseInt(count/parseInt(width/cellWidth) + 1) * cellHeight
+                    height: {
+                        if ( count <= 5 ) {
+                            return (Size.stageHeight + spacing) * count
+                        } else {
+                            (Size.stageHeight + spacing) * 5
+                        }
+                    }
+
                     anchors.left: parent.left
                     anchors.leftMargin: 50
                     anchors.right: parent.right
                     anchors.top: parent.top
+//                    anchors.bottom: parent.bottom
+                    anchors.topMargin: 8
+                    highlightFollowsCurrentItem: true
+                    highlightMoveDuration: 500
 //                    anchors.margins: 4
-                    cellWidth: Size.stageWidth + 3
-                    cellHeight: Size.stageHeight + 3
+//                    cellWidth: Size.stageWidth + 6
+//                    cellHeight: Size.stageHeight + 6
+                    spacing: 3
                     clip: true
                     model: subScheduleModel.selectStageModel(index)
                     delegate: stageDelegate
+                    currentIndex: -1
+//                    visible: false
                     property int subScheduleIndex: index
 
                     property bool __needEmitSig: false
@@ -438,13 +488,17 @@ Item {
 
                 Component {
                     id: stageDelegate
-                    Rectangle {
+                    Pane {
                         id: stageWrapper
-                        width: Size.stageWidth
+                        width: parent.width
                         height: Size.stageHeight
+                        padding: 5
+//                        Material.elevation: 1
+                        Material.background: stageChecked ? stageWrapper.Material.accent : Color.stageBackground()
                         property var __view: stageView
                         property var __parentSubView: wrapper.__view
                         property bool stageChecked: __view.subScheduleIndex === view.currentIndex && index === __view.currentIndex
+                        property int __status: status
 
                         function selectStageAction() {
                             sigSelectStage(date,title,details,result,id)
@@ -452,103 +506,99 @@ Item {
 
                         MouseArea {
                             anchors.fill: parent
+                            anchors.margins: -stageWrapper.padding
                             onClicked: {
-                                if( stageChecked || __ifForceSelectStage() )
+                                if( stageChecked || __isForceSelectStage() )
                                 {
                                     wrapper.selectCurrentSubSchedule()
                                     stageWrapper.__view.__needEmitSig = true
                                     stageWrapper.__view.currentIndex = index
+                                    if( stageWrapper.__view.currentIndex === index )
+                                        stageWrapper.__view.currentIndexChanged(index)
                                 }
                             }
                         }
 
                         Rectangle {
-                            id: stageRec
+                            id: mainRec
                             anchors.fill: parent
-                            Rectangle {
-                                id: dateRec
-                                width: stageRec.width
-                                height: 20
-                                color: "#E0EEEE"
-                                Text {
-                                    text: Common.dateFormat("yyyy-MM-dd hh:mm:ss",date)
-                                    anchors.verticalCenter: parent.verticalCenter
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 2
-                                }
-                                Rectangle {
-                                    id: stateRec
-                                    width: 15
-                                    height: parent.height
-                                    color: Color.stageStatusColor(status)
-                                    /*{
-                                        if( Common.overDateForNow(date) ) {
-                                            if( Common.isEmptyString(result) ) {
-                                                return Color.unDoneStateColor()
-                                            } else {
-                                                return Color.doneStateColor()
-                                            }
-                                        } else {
-                                            if( Common.nearThreeDayForNow(date) ) {
-                                                return Color.nearPastDueColor()
-                                            } else {
-                                                return Color.waitingStateColor()
-                                            }
-                                        }
-                                    }*/
-                                        /* Common.overDateForNow(date) ? (Common.isEmptyString(result) ? Color.unDoneStateColor() : Color.doneStateColor())
-                                                                       : Color.waitingStateColor() */
-                                    anchors.right: parent.right
+                            color: "transparent"
+
+                            Image {
+                                id: statusImg
+                                anchors.top: parent.top
+                                anchors.topMargin: 0
+                                anchors.left: parent.left
+                                width: 32
+                                height: width
+                                source: {
+                                    switch(stageWrapper.__status) {
+                                    case 1:
+                                        return "qrc:/res/markDone.png"
+                                    case 2:
+                                        return "qrc:/res/markUndone.png"
+                                    case 3:
+                                        return "qrc:/res/markNearPast.png"
+                                    case 4:
+                                        return "qrc:/res/markWaiting.png"
+                                    default:
+                                        return "qrc:/res/markDone.png"
+                                    }
                                 }
                             }
-                            Rectangle {
-                                id: titleRec
-                                width: stageRec.width
-                                anchors.left: parent.left
-                                anchors.top: dateRec.bottom
-                                anchors.right: parent.right
-                                height: 30
-                                Text {
-                                    text: title
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 5
-                                    anchors.right: parent.right
-                                    anchors.rightMargin: 5
-                                    elide: Text.ElideRight
-                                }
+
+                            Text {
+                                id: titleText
+                                text: title
+                                anchors.left: statusImg.right
+                                anchors.leftMargin: 5
+//                                anchors.right: parent.right
+//                                anchors.rightMargin: 5
+                                width: Size.stageWidth
+                                elide: Text.ElideRight
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: stageChecked ? Color.stageBackground() : "000000"
                             }
-                            Rectangle {
-                                id: resultRec
-                                width: stageRec.width
-                                anchors.left: parent.left
-                                anchors.top: titleRec.bottom
-                                anchors.right: parent.right
-                                height: 30
-                                color: Color.stageResultColor()
+
+                            Image {
+                                id: resultImg
+                                anchors.verticalCenter: parent.verticalCenter
+                                anchors.left: titleText.right
+                                width: 32
+                                height: 32
                                 visible: !Common.isEmptyString(resultText.text)
-                                Text {
-                                    id: resultText
-                                    text: result
-                                    anchors.left: parent.left
-                                    anchors.leftMargin: 2
-                                }
+                                source: stageChecked ? "qrc:/res/resultPress.png" : "qrc:/res/result.png"
                             }
-                        }
 
-                        Rectangle {
-                            anchors.fill: parent
-                            color: Color.stageSelectedColor()
-                            opacity: 0.1
-                            visible: stageWrapper.stageChecked
+                            Text {
+                                id: resultText
+                                text: result
+                                anchors.left: resultImg.right
+                                anchors.leftMargin: 2
+                                anchors.verticalCenter: parent.verticalCenter
+                                color: stageChecked ? Color.stageBackground() : "000000"
+                            }
+
+                            Text {
+                                id: dateText
+                                text: Common.dateFormat("yyyy-MM-dd hh:mm:ss",date)
+                                anchors.verticalCenter: parent.verticalCenter
+//                                anchors.left: parent.left
+//                                anchors.leftMargin: 2
+                                width: contentWidth
+                                anchors.right: parent.right
+                                anchors.rightMargin: 10
+                                color: stageChecked ? Color.stageBackground() : "000000"
+                            }
                         }
                     }
                 }
             }
             Rectangle {
                 anchors.left: subScheduleTitle.left
-                anchors.right: wrapper.right
-                anchors.verticalCenter: wrapper.verticalCenter
-                height: Size.subScheduleHeight
+                anchors.right: parent.right
+                anchors.verticalCenter: parent.verticalCenter
+                height: wrapper.height - wrapper.padding
                 color: Color.enabledColor()
                 visible: wrapper.__view.readyForSwap
                 opacity: 0.3

@@ -149,6 +149,11 @@ void StageModel::clear()
     endResetModel();
 }
 
+int StageModel::indexOf(int id)
+{
+    return IdSearchStage(id);
+}
+
 int StageModel::IdSearchStage(const int id)
 {
     int index = -1;

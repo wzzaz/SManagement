@@ -34,6 +34,8 @@ public:
 
     Q_INVOKABLE void removeSchedule(const int schId);
 
+    Q_INVOKABLE void selectScheduleWithId(const int schId, const int subId, const int stageId);
+
     /*******SubSchedule*/
     Q_INVOKABLE void selectSubSchedule(const int index);
 
@@ -45,6 +47,8 @@ public:
 
     Q_INVOKABLE void moveSubSchedule(const int fromId, const int toId);
 
+    Q_INVOKABLE void selectSubScheduleWithId(const int subId, const int stageId);
+
     /*******Stage*/
     void selectStage(const int index);
 
@@ -53,6 +57,8 @@ public:
     Q_INVOKABLE bool editStage(const int stageId, QDateTime date, QString title, QString details, QString result);
 
     Q_INVOKABLE void removeStage(const int stageId);
+
+    Q_INVOKABLE void selectStageWithId(const int stageId);
 
 
 
@@ -66,7 +72,11 @@ public:
 public slots:
     void slot_updateStageWorkStatus();
 
-signals:
+signals:    
+    void jumpToSchedule(int index, int subId, int stageId);
+    void jumpToSubSchedule(int index, int stageId);
+    void jumpToStage(int index);
+
     void scheduleAdded(int index);
     void subScheduleAdded(int index);
     void stageAdded(int index);

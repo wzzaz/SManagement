@@ -23,6 +23,7 @@ Item {
 
     RowLayout {
         anchors.fill: parent
+        spacing: 5
 
         Item { Layout.fillWidth: true }
 
@@ -30,22 +31,18 @@ Item {
             text: qsTr("已完成")
             checked: true
             status: 1
-            style: detailsCheckBoxStyle
             onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
         }
-        MenuSeparator{}
         StatusCheckBox {
             text: qsTr("未完成")
             checked: true
             status: 2
-            style: detailsCheckBoxStyle
             onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
         }
         StatusCheckBox {
             text: qsTr("接近过期")
             checked: true
             status: 3
-            style: detailsCheckBoxStyle
             onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
         }
         StatusCheckBox {
@@ -54,39 +51,7 @@ Item {
             status: 4
             Layout.alignment: Qt.AlignRight
             Layout.rightMargin: 5
-            style: detailsCheckBoxStyle
             onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
-        }
-    }
-
-    Component {
-        id: detailsCheckBoxStyle
-        CheckBoxStyle {
-            id: style
-            label: Rectangle {
-                implicitHeight: 20
-                implicitWidth: text.contentWidth + 25
-                color: Color.stageStatusColor(control.status)
-                radius: 3
-                Text {
-                    id: text
-                    text: control.text
-                    anchors.centerIn: parent
-                }
-
-//                Rectangle {
-//                    anchors.left: parent.left
-//                    anchors.leftMargin: 15
-//                    anchors.right: parent.right
-//                    height: parent.height
-//                    color: "transparent"
-
-//                    Text {
-//                        id: text
-//                        text: control.text
-//                    }
-//                }
-            }
         }
     }
 }

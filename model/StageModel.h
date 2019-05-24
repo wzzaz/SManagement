@@ -75,6 +75,8 @@ public:
 
     void clear();
 
+    int indexOf(int id);
+
 private:
     typedef enum {
         ASC,

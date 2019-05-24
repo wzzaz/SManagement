@@ -218,7 +218,6 @@ bool SubScheduleModel::moveSubSchedule(const int fromId, const int toId)
 void SubScheduleModel::clear()
 {
     beginResetModel();
-    qDebug() << "SubScheduleModel::clear()" << m_subScheduleData.size();
     qDeleteAll(m_subScheduleData);
     m_subScheduleData.clear();
 
@@ -231,4 +230,9 @@ SubScheduleStruct* SubScheduleModel::selectSubSchedule(const int index)
         return m_subScheduleData.at(index);
     }
     return new SubScheduleStruct();
+}
+
+int SubScheduleModel::indexOf(int id)
+{
+    return IdSearchSubSchedule(id);
 }

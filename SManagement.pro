@@ -1,4 +1,4 @@
-QT += quick sql widgets
+QT += quick sql widgets quickcontrols2
 CONFIG += c++11
 
 # The following define makes your compiler emit warnings if you use
@@ -20,7 +20,8 @@ SOURCES += \
     model/SubScheduleModel.cpp \
     model/StageModel.cpp \
     ScheduleManager.cpp \
-    Utils.cpp
+    Utils.cpp \
+    CalendarListManager.cpp
 
 RESOURCES += management.qrc \
     js.qrc \
@@ -44,7 +45,8 @@ HEADERS += \
     model/ScheduleModel.h \
     model/SubScheduleModel.h \
     model/StageModel.h \
-    Utils.h
+    Utils.h \
+    CalendarListManager.h
 
 #DISTFILES += \
 #    Common.js

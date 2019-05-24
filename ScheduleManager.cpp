@@ -144,6 +144,12 @@ void ScheduleManager::removeSchedule(const int schId)
     emit scheduleRemoved();
 }
 
+void ScheduleManager::selectScheduleWithId(const int schId, const int subId, int stageId)
+{
+    int index = m_pScheduleModel->indexOf(schId);
+    emit jumpToSchedule(index, subId, stageId);
+}
+
 void ScheduleManager::selectSubSchedule(const int index)
 {
     m_nSubScheduleIndex = index;
@@ -258,6 +264,12 @@ void ScheduleManager::moveSubSchedule(const int fromId, const int toId)
     ConnectionPool::closeConnection(db);
 }
 
+void ScheduleManager::selectSubScheduleWithId(const int subId, const int stageId)
+{
+    int index = m_pSubScheduleModel->indexOf(subId);
+    emit jumpToSubSchedule(index, stageId);
+}
+
 void ScheduleManager::selectStage(const int index)
 {
     m_nStageIndex = index;
@@ -363,6 +375,18 @@ void ScheduleManager::removeStage(const int stageId)
     emit stageRemoved();
 }
 
+void ScheduleManager::selectStageWithId(const int stageId)
+{
+    StageModel *stageModel = m_pSubScheduleModel->selectStageModel(m_nSubScheduleIndex);
+    qDebug() << "ScheduleManager::selectStageWithId stageModel=" << stageModel;
+    if( stageModel == nullptr )
+        return;
+
+    int index = stageModel->indexOf(stageId);
+    qDebug() << "ScheduleManager::selectStageWithId index=" << index << m_nSubScheduleIndex;
+    emit jumpToStage(index);
+}
+
 int ScheduleManager::messageBoxForQuestion(const QString showText)
 {
     int flag = QMessageBox::question(nullptr, tr("提示"), showText, tr("确认"), tr("取消"));
@@ -410,7 +434,7 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
     query.exec(QString("SELECT sub.name name,sub.id subId,stg.date date,stg.title,"
                        "stg.details details,stg.result result,stg.id stgId, stg.status_id status FROM sub_schedule sub "
                "LEFT JOIN stage stg ON stg.sub_schedule_id=sub.id "
-               "WHERE sub.schedule_id=%1 and stg.status_id in %2 "
+               "WHERE sub.schedule_id=%1 and (stg.status_id in %2 OR stg.status_id is null) "
                "ORDER BY sub.order_no ASC, stg.date ASC")
                .arg(scheduleId).arg(statusFilterToSQLCode()));
     while (query.next()) {

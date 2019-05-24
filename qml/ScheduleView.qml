@@ -3,15 +3,16 @@ import QtQuick.Controls 2.2
 import "../color.js" as Color
 import "../Common.js" as Common
 
-Item {
+Rectangle {
     implicitWidth: 200
     implicitHeight: 800
+    color: Color.dark()
 
     property bool __scheduleBeRemoved: false
 
     function isValueBeEdited(){}
 
-    function __ifForceSelectStage() {
+    function __isForceSelectStage() {
         if( isValueBeEdited() )
         {
             var flag = scheduleManager.messageBoxForQuestion(qsTr("当前修改未保存，是否确认跳转？"))
@@ -67,11 +68,17 @@ Item {
     Connections {
         target: scheduleManager
         onScheduleAdded: {
-            if( __ifForceSelectStage() )
+            if( __isForceSelectStage() )
                 goEditAddedSchedule(index)
         }
         onScheduleRemoved: {
             __scheduleBeRemoved = true
+        }
+        onJumpToSchedule: {
+            if( __isForceSelectStage() ) {
+                view.currentIndex = index
+                scheduleManager.selectSubScheduleWithId(subId, stageId)
+            }
         }
     }
 
@@ -86,9 +93,9 @@ Item {
             id: wrapper
             width: wrapper.ListView.view.width
             height: 90
-            radius: 2
-            color: ListView.isCurrentItem ? Color.sNavajoWhite() : Color.sFloralWhite()
-            opacity: hovered ? 0.7 : 1
+//            radius: 3
+            color: ListView.isCurrentItem ? Color.light() : "transparent" //Color.sFloralWhite()
+//            opacity: hovered ? 0.7 : 1
 
             property bool hovered: false
             property bool editing: false
@@ -107,7 +114,7 @@ Item {
                 preventStealing: true
                 propagateComposedEvents: true
                 onClicked: {
-                    if( __ifForceSelectStage() )
+                    if( __isForceSelectStage() )
                     {
                         wrapper.ListView.view.currentIndex = index
                     }
@@ -125,6 +132,8 @@ Item {
                 text: name
                 visible: !wrapper.editing
                 wrapMode: Text.WordWrap
+//                color: "#303133"
+//                color: wrapper.ListView.isCurrentItem ? "white" : Color.dark()
             }
 
             TextInput {
@@ -144,13 +153,15 @@ Item {
                     finishEditName()
                 }
                 onFocusChanged: {
-                    console.log(focus,active,activeFocus)
                     if( !focus ) {
                         finishEditName()
                     }
                 }
+
                 onActiveFocusChanged: {
-                    console.log("activeFocus:",activeFocus)
+                    if( !activeFocus ) {
+                        finishEditName()
+                    }
                 }
 
                 function goEditName(val) {
@@ -168,11 +179,13 @@ Item {
             }
 
             Rectangle {
-                width: parent.width
+                width: parent.width - 10
                 height: 2
                 anchors.bottom: parent.bottom
-                color: ListView.isCurrentItem ? Color.sFloralWhite() : Color.sNavajoWhite()
+                anchors.horizontalCenter: parent.horizontalCenter
+                color: Color.light()
                 opacity: 0.2
+                visible: !wrapper.ListView.isCurrentItem
             }
 
             IconButton {

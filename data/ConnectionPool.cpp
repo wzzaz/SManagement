@@ -113,7 +113,7 @@ QSqlDatabase ConnectionPool::createConnection(const QString &connectionName) {
 
         if (testOnBorrow) {
             // 返回连接前访问数据库，如果连接断开，重新建立连接
-            qDebug() << "Test connection on borrow, execute:" << testOnBorrowSql << ", for" << connectionName;
+//            qDebug() << "Test connection on borrow, execute:" << testOnBorrowSql << ", for" << connectionName;
             QSqlQuery query(testOnBorrowSql, db1);
 
             if (query.lastError().type() != QSqlError::NoError && !db1.open()) {

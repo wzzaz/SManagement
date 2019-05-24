@@ -4,7 +4,9 @@ import QtQuick.Window 2.2
 import QtQuick.Layouts 1.2
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
+import QtQuick.Controls.Material 2.12
 import "../Common.js" as Common
+import "../color.js" as Color
 
 ApplicationWindow {
     id: rootWindow
@@ -14,22 +16,26 @@ ApplicationWindow {
     title: qsTr("SManagement")
     visibility: Window.Maximized
 
-    menuBar: MenuBar {
-        Menu {
-            title: "File"
-            MenuItem { text: "Open..." }
-            MenuItem { text: "Close" }
-        }
+    Material.accent: Material.color(Material.LightBlue,Material.Shade300)
 
-        Menu {
-            title: "Edit"
-            MenuItem { text: "Cut" }
-            MenuItem { text: "Copy" }
-            MenuItem { text: "Paste" }
-        }
-    }
+//    menuBar: MenuBar {
+//        Menu {
+//            title: "File"
+//            MenuItem { text: "Open..." }
+//            MenuItem { text: "Close" }
+//        }
+
+//        Menu {
+//            title: "Edit"
+//            MenuItem { text: "Cut" }
+//            MenuItem { text: "Copy" }
+//            MenuItem { text: "Paste" }
+//        }
+//    }
 
     toolBar:ToolBar {
+        height: 50
+
         ExclusiveGroup { id: toolBarGroup }
         HomeToolArea {
             id: homeToolBar
@@ -65,7 +71,12 @@ ApplicationWindow {
                 hoverIcon: "qrc:/res/syncHover.png"
                 pressIcon: "qrc:/res/syncPress.png"
                 normalIcon: "qrc:/res/sync.png"
-                onClicked: scheduleManager.updateStageWorkStatus()
+                onClicked: {
+                    if( rootTabView.currentIndex === 0 )
+                        calendarListManager.updateCalendarQMLView()
+                    else if( rootTabView.currentIndex === 1 )
+                        scheduleManager.updateStageWorkStatus()
+                }
             }
             Label { text: statisBar.status }
             Item { Layout.fillWidth: true }
@@ -111,7 +122,31 @@ ApplicationWindow {
         tabPosition: Qt.BottomEdge
         Tab {
             title: "home"
-            Rectangle {}
+
+            Rectangle {
+                anchors.fill: parent
+                color: "transparent"
+                SplitView {
+                    width: parent.width
+                    height: parent.height
+                    CalendarEventList {
+                        id: eventList
+                        Layout.minimumWidth: 300
+                        Layout.maximumWidth: 500
+                        onJumpToScheduleDetail: {
+                            rootTabView.currentIndex = 1
+                            scheduleManager.selectScheduleWithId(schId, subId, stageId)
+                        }
+                    }
+                    CalendarMonthView {
+                        id: calendarMonthView
+                        Layout.minimumWidth: 900
+                        height: parent.height
+                        Layout.fillWidth: true
+                        onSelectedDateChanged: eventList.selectedDate = selectedDate
+                    }
+                }
+            }
         }
         Tab {
             title: "details"

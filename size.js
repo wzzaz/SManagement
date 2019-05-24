@@ -1,3 +1,3 @@
 var subScheduleHeight = 180
-var stageWidth = 200
-var stageHeight = 80
+var stageWidth = 500
+var stageHeight = 50

@@ -1,5 +1,6 @@
 import QtQuick 2.10
-import QtQuick.Controls 2.5
+import QtQuick.Controls 2.12
+import QtQuick.Controls.Material 2.12
 import Fluid.Controls 1.0 as FluidControls
 import "../size.js" as Size
 import "../color.js" as Color
@@ -84,13 +85,14 @@ Item {
             visible: __id !== -1
         }
 
-        IconButton {
-            anchors.verticalCenter: parent.verticalCenter
-            anchors.right: parent.right
-            anchors.rightMargin: 10
-            normalIcon: "qrc:/res/pull.png"
-            hoverIcon: "qrc:/res/pull.png"
-            pressIcon: "qrc:/res/pull.png"
+        Button {
+            width: 32
+            height: 32
+            icon.source: "qrc:/res/pull.png"
+            highlighted: true
+            anchors.left: dateEdit.right
+            anchors.leftMargin: 20
+            anchors.verticalCenter: dateEdit.verticalCenter
             visible: __id !== -1
             onClicked: {
                 dateTimePickerDialog.openWithDateTime(date)
@@ -106,27 +108,23 @@ Item {
         TextField {
             id: titleEdit
             text: title
-            anchors.fill: parent
-            anchors.margins: 10
+            width: parent.width - 20
+            anchors.horizontalCenter: parent.horizontalCenter
             wrapMode: TextInput.Wrap
             selectByMouse: true
             font.bold: true
-//            onAccepted: {
-//                title = text
-//            }
-//            onEditingFinished: {
-//                title = text
-//            }
-//            onTextChanged: title = text
+            placeholderText: qsTr("阶段标题...")
         }
     }
 
-    Rectangle {
+    Pane {
         id: detailsRect
-        width: parent.width
+        width: parent.width - 10
+        anchors.horizontalCenter: parent.horizontalCenter
         anchors.top: titleRect.bottom
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 150
+        Material.elevation: 1
         Flickable {
             id: flick
             anchors.fill: parent
@@ -150,10 +148,11 @@ Item {
             TextEdit {
                 id: detailsEdit
                 width: flick.width
+                height: flick.height
                 focus: true
                 wrapMode: TextEdit.Wrap
                 selectByMouse: true
-                onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)
+                onCursorRectangleChanged: flick.ensureVisible(cursorRectangle)                
                 text: details
 //                onTextChanged: details = text
             }
@@ -164,14 +163,28 @@ Item {
         id: resultRect
         width: parent.width
         anchors.top: detailsRect.bottom
+        anchors.topMargin: 10
         anchors.bottom: parent.bottom
         anchors.bottomMargin: 90
         color: Color.stageResultColor()
+
+        Image {
+            id: resultImg
+            anchors.verticalCenter: parent.verticalCenter
+            anchors.left: parent.left
+            anchors.leftMargin: 5
+            width: 32
+            height: 32
+            source: "qrc:/res/result.png"
+        }
+
         TextField {
             id: resultEdit
             text: result
-            anchors.fill: parent
             anchors.margins: 10
+            anchors.left: resultImg.right
+            anchors.right: parent.right
+            placeholderText: qsTr("完成结果...")
             selectByMouse: true
         }
     }

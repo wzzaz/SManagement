@@ -2,12 +2,14 @@
 #include <QApplication>
 #include <QQmlApplicationEngine>
 #include <QQmlContext>
+#include <QQuickStyle>
 #include <QDebug>
 #include <QFont>
 
 #include "model/ScheduleModel.h"
 #include "model/SubScheduleModel.h"
 #include "ScheduleManager.h"
+#include "CalendarListManager.h"
 
 int main(int argc, char *argv[])
 {
@@ -30,9 +32,14 @@ int main(int argc, char *argv[])
     engine.rootContext()->setContextProperty("scheduleManager", scheduleManager);
     scheduleManager->initialize();
 
+    CalendarListManager *calendarListManager = new CalendarListManager();
+    engine.rootContext()->setContextProperty("calendarListManager", calendarListManager);
+
     QFont font("Source Code Pro");
     font.setPixelSize(15);
     app.setFont(font);
+
+    QQuickStyle::setStyle("Material");
 
 
     engine.load(QUrl(QStringLiteral("qrc:/qml/main.qml")));

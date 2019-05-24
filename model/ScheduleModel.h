@@ -63,6 +63,8 @@ public:
 
     int size() { return m_scheduleData.size(); }
 
+    int indexOf(int id);
+
 private:
     int NameSearchSchedule(const QString name);
     int IdSearchSchedule(const int id);

@@ -11,10 +11,11 @@ Button {
     Component {
         id: iconButtonStyle
         ButtonStyle {
-            background: Image {
-                source: control.pressed ? iconButton.pressIcon :
+            background:
+                Image {
+                    source: control.pressed ? iconButton.pressIcon :
                                           ( control.hovered ? iconButton.hoverIcon : iconButton.normalIcon )
-            }
+                }
         }
     }
 

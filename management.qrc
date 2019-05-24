@@ -8,5 +8,8 @@
         <file>qml/DetailsToolArea.qml</file>
         <file>qml/HomeToolArea.qml</file>
         <file>qml/StatusCheckBox.qml</file>
+        <file>qml/CalendarView.qml</file>
+        <file>qml/CalendarEventList.qml</file>
+        <file>qml/CalendarMonthView.qml</file>
     </qresource>
 </RCC>

@@ -59,3 +59,26 @@ function stageStatusColor(status) {
         return waitingStateColor()
     }
 }
+
+
+function dark() {
+    return "#bcbcbc"
+}
+
+function primary() {
+    return "#e0e0e0"
+}
+
+function light() {
+    return "#ffffff"
+}
+
+function subScheduleBackground() {
+//    return "#e7e7e7"
+    return "#efefef"
+}
+
+function stageBackground() {
+//    return "#eeeeee"
+    return "#fafafa"
+}

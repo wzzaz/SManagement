@@ -184,3 +184,8 @@ ScheduleStruct ScheduleModel::selectSchedule(const int index)
     }
     return ScheduleStruct();
 }
+
+int ScheduleModel::indexOf(int id)
+{
+    return IdSearchSchedule(id);
+}

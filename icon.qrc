@@ -31,5 +31,12 @@
         <file>res/sync.png</file>
         <file>res/syncHover.png</file>
         <file>res/syncPress.png</file>
+        <file>res/next.png</file>
+        <file>res/markDone.png</file>
+        <file>res/markNearPast.png</file>
+        <file>res/markUndone.png</file>
+        <file>res/markWaiting.png</file>
+        <file>res/result.png</file>
+        <file>res/resultPress.png</file>
     </qresource>
 </RCC>

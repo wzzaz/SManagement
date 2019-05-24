@@ -11,7 +11,6 @@
 typedef struct _subSchedule {
     QString name;
     int id;
-//    QSharedPointer<StageModel> stageModel;
     StageModel* stageModel;
 
     _subSchedule(QString s_name, int n_id = -1) {
@@ -67,7 +66,6 @@ public:
     void addStage(const QString subName, QDateTime date, QString title, QString details, QString result, int status, int id);
 
     Q_INVOKABLE StageModel *selectStageModel(const int index);
-    //Q_INVOKABLE StageModel* stageModel(const int index) { return m_subScheduleData.at(index).stageModel; }
 
     void clear();
 
@@ -76,6 +74,8 @@ public:
     int size() { return m_subScheduleData.size(); }
 
     QString errorText() { return m_errorText; }
+
+    int indexOf(int id);
 
 private:
     int NameSearchSubSchedule(const QString name);
