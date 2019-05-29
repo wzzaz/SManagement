@@ -1,7 +1,7 @@
 import QtQuick 2.0
 import QtQuick.Controls 2.2
-import "../color.js" as Color
-import "../Common.js" as Common
+import "../js/color.js" as Color
+import "../js/Common.js" as Common
 
 Rectangle {
     implicitWidth: 200
@@ -27,6 +27,18 @@ Rectangle {
         {
             return true
         }
+    }
+
+    Button {
+        id: addBtn
+        width: parent.width
+        height: 32
+//        icon.source: "qrc:/res/add.png"
+        text: "+"
+        highlighted: true
+        visible: view.count === 0
+        z: 100
+        onClicked: scheduleManager.addSchedule("",1)
     }
 
     ListView {

@@ -1,7 +1,7 @@
 <RCC>
     <qresource prefix="/">
-        <file>Common.js</file>
-        <file>size.js</file>
-        <file>color.js</file>
+        <file>js/color.js</file>
+        <file>js/Common.js</file>
+        <file>js/size.js</file>
     </qresource>
 </RCC>

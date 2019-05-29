@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.5
 import Qt.labs.calendar 1.0
-import "../color.js" as Color
+import "../js/color.js" as Color
 
 Item {
     property date selectedDate: new Date
@@ -15,7 +15,7 @@ Item {
         var year = __calendarViewDate.getFullYear()
         var month = __calendarViewDate.getMonth()
 
-        __calendarViewDate = null
+//        __calendarViewDate = null
         if( month === 0 ) {
             __calendarViewDate = new Date(year-1, 11, 1)
         } else {
@@ -27,7 +27,7 @@ Item {
         var year = __calendarViewDate.getFullYear()
         var month = __calendarViewDate.getMonth()
 
-        __calendarViewDate = null
+//        __calendarViewDate = null
         if( month === 11 ) {
             __calendarViewDate = new Date(year+1, 0, 1)
         } else {
@@ -39,7 +39,7 @@ Item {
         var year = __calendarViewDate.getFullYear()
         var month = __calendarViewDate.getMonth()
 
-        __calendarViewDate = null
+        __calendarViewDate = new Date(year, month-1, 1)
 
         __calendarViewDate = new Date(year, month, 1)
     }

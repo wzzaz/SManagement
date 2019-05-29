@@ -12,12 +12,14 @@
 class ScheduleModel;
 class SubScheduleModel;
 class StageModel;
+class CommonManager;
 class ScheduleManager : public QObject
 {
     Q_OBJECT
 public:
     ScheduleManager(QObject *pScheduleModel,
                     QObject *pSubScheduleModel,
+                    QObject *pCommonManager,
                     QObject *parent = nullptr);
     ~ScheduleManager();
 
@@ -100,21 +102,18 @@ private:
 
     void clockInitialize();
 
-    void statusFilterInitialize();
-    QString statusFilterToSQLCode();
-
 private:
 
     ScheduleModel *m_pScheduleModel;
     SubScheduleModel *m_pSubScheduleModel;
+
+    CommonManager *m_pCommonManager;
 
     int m_nScheduleIndex;
     int m_nSubScheduleIndex;
     int m_nStageIndex;
 
     QTimer *m_pStatusManagerClock;
-
-    QMap<int, bool> m_statusFilter;
 };
 
 #endif // SCHEDULEMANAGER_H

@@ -7,12 +7,22 @@
 #include <QMutex>
 #include <QMutexLocker>
 
+#ifdef MYSQL_DATE
+#define SQL_AUTO_INCREMENT "select @@IDENTITY"
+#elif SQLITE_DATA
+#define SQL_AUTO_INCREMENT "select last_insert_rowid()"
+#endif
+
 class ConnectionPool {
 public:
     static void release(); // 关闭所有的数据库连接
     static QSqlDatabase openConnection();                 // 获取数据库连接
     static void closeConnection(QSqlDatabase connection); // 释放数据库连接回连接池
     ~ConnectionPool();
+
+#ifdef SQLITE_DATA
+    static void initializeSQLite();
+#endif
 
 private:
     static ConnectionPool& getInstance();

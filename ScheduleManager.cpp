@@ -2,28 +2,23 @@
 #include "model/ScheduleModel.h"
 #include "model/SubScheduleModel.h"
 #include "data/ConnectionPool.h"
+#include "CommonManager.h"
 
 #include <QStringList>
 #include <QMessageBox>
 
-static QString g_stage_time_stamp_diff  = QString("TIMESTAMPDIFF(HOUR,(SELECT CURRENT_TIMESTAMP()), stage.date)");
-static QString g_cur_time_stamp_diff    = QString("TIMESTAMPDIFF(HOUR,stage.date, (SELECT CURRENT_TIMESTAMP()))");
-static QString g_result_is_empty        = QString("CHAR_LENGTH(result) = 0");
-static QString g_sql_stage_status_value = QString("CASE WHEN (%1>=72) then 4 WHEN (%1>=0) AND (%1<72) THEN 3 WHEN (%2>0) AND (%3) THEN 2 ELSE 1 END")
-        .arg(g_stage_time_stamp_diff).arg(g_cur_time_stamp_diff).arg(g_result_is_empty);
-
 #define STAGE_CLOCK_TIME 3600000    // 1 hour
 
-ScheduleManager::ScheduleManager(QObject *pScheduleModel, QObject *pSubScheduleModel, QObject *parent)
+ScheduleManager::ScheduleManager(QObject *pScheduleModel, QObject *pSubScheduleModel, QObject *pCommonManager, QObject *parent)
     : QObject(parent)
 
 {
     m_pScheduleModel    = static_cast<ScheduleModel*>(pScheduleModel);
     m_pSubScheduleModel = static_cast<SubScheduleModel*>(pSubScheduleModel);
+    m_pCommonManager    = static_cast<CommonManager*>(pCommonManager);
 
     updateStageWorkStatus();
     clockInitialize();
-    statusFilterInitialize();
 }
 
 ScheduleManager::~ScheduleManager()
@@ -46,6 +41,8 @@ void ScheduleManager::initialize()
         int id       = query.value("id").toInt();
         m_pScheduleModel->addSchedule(name, priority, id);
     }
+    QString errText = query.lastError().text();
+    qDebug() << "ScheduleManager::initialize() errText=" << errText;
     ConnectionPool::closeConnection(db);
 }
 
@@ -66,10 +63,11 @@ void ScheduleManager::addSchedule(const QString name, const int priority)
     bool success = query.exec(QString("INSERT INTO schedule(name,priority,created_at,updated_at) "
                "VALUES ('%1', %2, '%3', '%4')")
                .arg(name).arg(priority).arg(date).arg(date));
-    query.exec("select @@IDENTITY");
+    query.exec(SQL_AUTO_INCREMENT);
     if( query.next() )
         id = query.value(0).toInt();
     ConnectionPool::closeConnection(db);
+    qDebug() << __FUNCTION__ << id << query.lastError();
 
     if( !success )
         return;
@@ -88,8 +86,10 @@ bool ScheduleManager::editScheduleName(const int schId, const QString name)
                               .arg(name).arg(date).arg(schId));
     QString errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
+    qDebug() << __FUNCTION__ << query.lastQuery();
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return false;
     }
@@ -110,6 +110,7 @@ bool ScheduleManager::editSchedulePriority(const int schId, const int priority)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return false;
     }
@@ -136,6 +137,7 @@ void ScheduleManager::removeSchedule(const int schId)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
@@ -168,13 +170,14 @@ void ScheduleManager::addSubSchedule(const QString name, const int order)
                               .arg(name).arg(order).arg(schId).arg(date).arg(date)
                               );
     QString errText = query.lastError().text() + "\n" + query.lastQuery();
-    query.exec("select @@IDENTITY");
+    query.exec(SQL_AUTO_INCREMENT);
     if( query.next() )
         subId = query.value(0).toInt();
     ConnectionPool::closeConnection(db);
     qDebug() << "ScheduleManager::addSubSchedule subId:" << subId;
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
@@ -198,6 +201,7 @@ bool ScheduleManager::editSubScheduleName(const int subId, const QString name)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return false;
     }
@@ -224,6 +228,7 @@ void ScheduleManager::removeSubSchedule(const int subId, const int order)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
@@ -249,6 +254,7 @@ void ScheduleManager::moveSubSchedule(const int fromId, const int toId)
                                    .arg(fromId).arg(toId).arg(date));
     QString errText = query.lastError().text();
     if( !querySuccess ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         ConnectionPool::closeConnection(db);
         return;
@@ -290,12 +296,13 @@ void ScheduleManager::insertStage(const QDateTime date, const QString title, con
                               .arg(addDate).arg(addDate)
                               );
     QString errText = query.lastError().text();
-    query.exec("select @@IDENTITY");
+    query.exec(SQL_AUTO_INCREMENT);
     if( query.next() )
         stageId = query.value(0).toInt();
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
@@ -332,6 +339,7 @@ bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return false;
     }
@@ -363,6 +371,7 @@ void ScheduleManager::removeStage(const int stageId)
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return;
     }
@@ -394,7 +403,21 @@ int ScheduleManager::messageBoxForQuestion(const QString showText)
 }
 
 bool ScheduleManager::updateStageWorkStatus()
-{
+{    
+#ifdef MYSQL_DATA
+    QString g_result_is_empty = QString("CHAR_LENGTH(result) = 0");
+#elif SQLITE_DATA
+    QString g_result_is_empty = QString("LENGTH(result) = 0");
+#endif
+    QDateTime now = QDateTime::currentDateTime();
+    QString nowStr = now.toString("yyyy-MM-dd HH:mm:ss");
+    QString threeDayAfter = now.addDays(3).toString("yyyy-MM-dd HH:mm:ss");
+
+    QString g_sql_stage_status_value = QString("CASE WHEN (stage.date>='%1') then 4 WHEN (stage.date>='%2') AND (stage.date<'%1') THEN 3 WHEN (stage.date<'%2') AND (%3) THEN 2 ELSE 1 END")
+                .arg(threeDayAfter).arg(nowStr).arg(g_result_is_empty);
+
+
+
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("UPDATE stage SET status_id=%1").arg(g_sql_stage_status_value));
@@ -402,6 +425,7 @@ bool ScheduleManager::updateStageWorkStatus()
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText << query.lastQuery();
         QMessageBox::warning(nullptr, tr("错误!"), errText);
         return false;
     }
@@ -412,7 +436,7 @@ bool ScheduleManager::updateStageWorkStatus()
 
 void ScheduleManager::setStatusFilter(int status, bool checked)
 {
-    m_statusFilter.insert(status,checked);
+    m_pCommonManager->setStatusFilter(status,checked);
     selectSchedule(m_nScheduleIndex);
 }
 
@@ -434,9 +458,9 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
     query.exec(QString("SELECT sub.name name,sub.id subId,stg.date date,stg.title,"
                        "stg.details details,stg.result result,stg.id stgId, stg.status_id status FROM sub_schedule sub "
                "LEFT JOIN stage stg ON stg.sub_schedule_id=sub.id "
-               "WHERE sub.schedule_id=%1 and (stg.status_id in %2 OR stg.status_id is null) "
+               "WHERE sub.schedule_id=%1 AND (stg.status_id in %2 OR stg.status_id is null) "
                "ORDER BY sub.order_no ASC, stg.date ASC")
-               .arg(scheduleId).arg(statusFilterToSQLCode()));
+               .arg(scheduleId).arg(m_pCommonManager->statusFilterToSQLCode()));
     while (query.next()) {
         QString name = query.value("name").toString();
         int subId    = query.value("subId").toInt();
@@ -477,6 +501,7 @@ void ScheduleManager::updateBehindSubScheduleOrder(const int startOrder, const i
     QString errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
     if( !success ) {
+        qDebug() << __FUNCTION__ << errText;
         QMessageBox::warning(nullptr, tr("错误!"), errText);
     }
 }
@@ -490,26 +515,4 @@ void ScheduleManager::clockInitialize()
     m_pStatusManagerClock->setInterval(STAGE_CLOCK_TIME);
     m_pStatusManagerClock->setSingleShot(false);
     m_pStatusManagerClock->start();
-}
-
-void ScheduleManager::statusFilterInitialize()
-{
-    m_statusFilter.clear();
-
-    m_statusFilter.insert(status_done,true);
-    m_statusFilter.insert(status_undone,true);
-    m_statusFilter.insert(status_closeToExpire,true);
-    m_statusFilter.insert(status_waiting,true);
-}
-
-QString ScheduleManager::statusFilterToSQLCode()
-{
-    QStringList filters;
-    QMap<int,bool>::const_iterator i;
-    for (i = m_statusFilter.constBegin(); i != m_statusFilter.constEnd(); ++i) {
-        if ( i.value() )
-            filters << QString::number(i.key());
-    }
-
-    return QString("(%1)").arg(filters.join(","));
 }

@@ -6,6 +6,15 @@ Rectangle {
 
     signal jumpToScheduleDetail(int schId, int subId, int stageId)
 
+    function updateView() {
+        selectedDateChanged()
+    }
+
+    Connections {
+        target: calendarListManager
+        onUpdate: updateView()
+    }
+
     Component {
         id: eventListHeader
 

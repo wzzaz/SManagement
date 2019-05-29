@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 2.5
 import Qt.labs.calendar 1.0
-import "../color.js" as Color
+import "../js/color.js" as Color
 
 Item {
     property date selectedDate: new Date

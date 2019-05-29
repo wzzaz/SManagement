@@ -20,6 +20,8 @@ public:
 
     static int checkStageWorkStatus(QDateTime stageTime, bool resultEmpty);
 
+    static void createFile(QString filePath, QString fileName);
+
 };
 
 #endif // UTILS_H

@@ -66,11 +66,12 @@ private:
     int m_status;
 };
 
+class CommonManager;
 class CalendarListManager : public QObject
 {
     Q_OBJECT
 public:
-    explicit CalendarListManager(QObject *parent = nullptr);
+    explicit CalendarListManager(QObject *pCommonManager,QObject *parent = nullptr);
 
     Q_INVOKABLE bool isGivenDateExistGivenStatus(QDate date, int status);
 
@@ -82,6 +83,9 @@ signals:
     void update();
 
 public slots:
+
+private:
+    CommonManager *m_pCommonManager;
 };
 
 #endif // CALENDARLISTMANAGER_H

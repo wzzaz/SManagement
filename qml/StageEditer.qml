@@ -2,9 +2,9 @@ import QtQuick 2.10
 import QtQuick.Controls 2.12
 import QtQuick.Controls.Material 2.12
 import Fluid.Controls 1.0 as FluidControls
-import "../size.js" as Size
-import "../color.js" as Color
-import "../Common.js" as Common
+import "../js/size.js" as Size
+import "../js/color.js" as Color
+import "../js/Common.js" as Common
 
 Item {
     implicitWidth: 300

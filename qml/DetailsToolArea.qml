@@ -2,7 +2,7 @@ import QtQuick 2.0
 import QtQuick.Layouts 1.12
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
-import "../color.js" as Color
+import "../js/color.js" as Color
 
 Item {
     id: detailsToolArea
@@ -31,19 +31,19 @@ Item {
             text: qsTr("已完成")
             checked: true
             status: 1
-            onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
+            onCheckedChanged: commonManager.setStatusFilter(status,checked)
         }
         StatusCheckBox {
             text: qsTr("未完成")
             checked: true
             status: 2
-            onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
+            onCheckedChanged: commonManager.setStatusFilter(status,checked)
         }
         StatusCheckBox {
             text: qsTr("接近过期")
             checked: true
             status: 3
-            onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
+            onCheckedChanged: commonManager.setStatusFilter(status,checked)
         }
         StatusCheckBox {
             text: qsTr("等待完成")
@@ -51,7 +51,7 @@ Item {
             status: 4
             Layout.alignment: Qt.AlignRight
             Layout.rightMargin: 5
-            onCheckedChanged: scheduleManager.setStatusFilter(status,checked)
+            onCheckedChanged: commonManager.setStatusFilter(status,checked)
         }
     }
 }

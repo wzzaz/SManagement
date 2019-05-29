@@ -5,8 +5,8 @@ import QtQuick.Layouts 1.2
 import QtQuick.Controls 1.4
 import QtQuick.Controls.Styles 1.4
 import QtQuick.Controls.Material 2.12
-import "../Common.js" as Common
-import "../color.js" as Color
+import "../js/Common.js" as Common
+import "../js/color.js" as Color
 
 ApplicationWindow {
     id: rootWindow
@@ -40,23 +40,24 @@ ApplicationWindow {
         HomeToolArea {
             id: homeToolBar
             anchors.fill: parent
-            checked: true
+//            checked: true
             exclusiveGroup: toolBarGroup
         }
         DetailsToolArea {
             id: detailsToolBar
             anchors.fill: parent
+            checked: true
             exclusiveGroup: toolBarGroup
         }
-        Connections {
-            target: rootTabView
-            onCurrentIndexChanged: {
-                if (rootTabView.currentIndex === 0)
-                    homeToolBar.checked = true
-                else
-                   detailsToolBar.checked = true
-            }
-        }
+//        Connections {
+//            target: rootTabView
+//            onCurrentIndexChanged: {
+//                if (rootTabView.currentIndex === 0)
+//                    homeToolBar.checked = true
+//                else
+//                   detailsToolBar.checked = true
+//            }
+//        }
     }
 
     statusBar: StatusBar {
@@ -80,6 +81,14 @@ ApplicationWindow {
             }
             Label { text: statisBar.status }
             Item { Layout.fillWidth: true }
+        }
+    }
+
+    Connections {
+        target: commonManager
+        onNeedRepaintView: {
+            calendarListManager.updateCalendarQMLView()
+            scheduleManager.updateStageWorkStatus()
         }
     }
 
