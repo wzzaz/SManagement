@@ -15,8 +15,8 @@ bool CalendarListManager::isGivenDateExistGivenStatus(QDate date, int status)
     if( !m_pCommonManager->isStatusChecked(status) )
         return false;
 
-#ifdef MYSQL_DATE
-    QString g_date_diff = QString("DATEDIFF('%1',stg.date)").arg(date.toString("yyyy-MM-dd"));
+#ifdef MYSQL_DATA
+    QString g_date_diff = QString("DATEDIFF('%1',date)").arg(date.toString("yyyy-MM-dd"));
 #elif SQLITE_DATA
     QString g_date_diff = QString("STRFTIME('%Y%m%d','%1') - STRFTIME('%Y%m%d',date)").arg(date.toString("yyyy-MM-dd"));
 #endif

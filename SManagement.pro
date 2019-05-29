@@ -55,8 +55,8 @@ HEADERS += \
     CommonManager.h
 
 # mutex DEFINE
-#DEFINES += MYSQL_DATA       # [-]
-DEFINES += SQLITE_DATA      # [-]
+DEFINES += MYSQL_DATA       # [-]
+#DEFINES += SQLITE_DATA      # [-]
 
 DISTFILES += \
     icon.rc

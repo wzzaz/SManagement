@@ -7,7 +7,7 @@
 #include <QMutex>
 #include <QMutexLocker>
 
-#ifdef MYSQL_DATE
+#ifdef MYSQL_DATA
 #define SQL_AUTO_INCREMENT "select @@IDENTITY"
 #elif SQLITE_DATA
 #define SQL_AUTO_INCREMENT "select last_insert_rowid()"
