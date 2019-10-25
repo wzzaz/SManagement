@@ -54,9 +54,9 @@ HEADERS += \
     CalendarListManager.h \
     CommonManager.h
 
-# mutex DEFINE
-DEFINES += MYSQL_DATA       # [-]
-#DEFINES += SQLITE_DATA      # [-]
+                         # mutex DEFINE
+#DEFINES += MYSQL_DATA   # [-]
+DEFINES += SQLITE_DATA   # [-]
 
 DISTFILES += \
     icon.rc

@@ -54,7 +54,7 @@ public:
     /*******Stage*/
     void selectStage(const int index);
 
-    Q_INVOKABLE void insertStage(const QDateTime date, const QString title, const QString details, const QString result);
+    Q_INVOKABLE void insertStage(QDateTime date, QString title, QString details, QString result);
 
     Q_INVOKABLE bool editStage(const int stageId, QDateTime date, QString title, QString details, QString result);
 

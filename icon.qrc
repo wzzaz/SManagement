@@ -39,5 +39,7 @@
         <file>res/result.png</file>
         <file>res/resultPress.png</file>
         <file>res/manager.ico</file>
+        <file>res/fold.png</file>
+        <file>res/unfold.png</file>
     </qresource>
 </RCC>

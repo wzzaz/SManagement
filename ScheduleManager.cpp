@@ -129,11 +129,27 @@ void ScheduleManager::removeSchedule(const int schId)
     QSqlQuery query(db);
 //    bool success = query.exec(QString("DELETE FROM schedule WHERE id=%1")
 //                              .arg(schId));
-    bool success = query.exec(QString("DELETE schedule,sub_schedule,stage FROM schedule "
+    bool success;
+    QString errText;
+#ifdef SQLITE_DATA
+    do {
+        success = query.exec(QString("DELETE FROM stage WHERE sub_schedule_id in (SELECT id FROM sub_schedule where schedule_id=%1)").arg(schId));
+        if( !success )
+            break;
+        success = query.exec(QString("DELETE FROM sub_schedule WHERE schedule_id=%1").arg(schId));
+        if( !success )
+            break;
+        success = query.exec(QString("DELETE FROM schedule WHERE id=%1").arg(schId));
+        if( !success )
+            break;
+    } while(0);
+#else
+    success = query.exec(QString("DELETE schedule,sub_schedule,stage FROM schedule "
                                       "LEFT JOIN sub_schedule ON sub_schedule.schedule_id=schedule.id "
                                       "LEFT JOIN stage ON stage.sub_schedule_id=sub_schedule.id WHERE schedule.id=%1")
                               .arg(schId));
-    QString errText = query.lastError().text();
+#endif
+    errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
@@ -220,11 +236,24 @@ void ScheduleManager::removeSubSchedule(const int subId, const int order)
     QSqlQuery query(db);
 //    bool success = query.exec(QString("DELETE FROM sub_schedule WHERE id=%1")
 //                              .arg(subId));
+    bool success;
+    QString errText;
+#ifdef SQLITE_DATA
+    do {
+        success = query.exec(QString("DELETE FROM stage WHERE sub_schedule_id=%1").arg(subId));
+        if (!success)
+            break;
+        success = query.exec(QString("DELETE FROM sub_schedule WHERE id=%1").arg(subId));
+        if (!success)
+            break;
+    } while(0);
+#else
     bool success = query.exec(QString("DELETE sub_schedule,stage FROM sub_schedule "
                                       "LEFT JOIN stage ON stage.sub_schedule_id=sub_schedule.id "
                                       "WHERE sub_schedule.id=%1")
                               .arg(subId));
-    QString errText = query.lastError().text();
+#endif
+    errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
 
     if( !success ) {
@@ -281,7 +310,7 @@ void ScheduleManager::selectStage(const int index)
     m_nStageIndex = index;
 }
 
-void ScheduleManager::insertStage(const QDateTime date, const QString title, const QString details, const QString result)
+void ScheduleManager::insertStage(QDateTime date, QString title, QString details, QString result)
 {
     QString addDate = QDateTime::currentDateTime().toString( "yyyy-MM-dd HH:mm:ss" );
     int subId = m_pSubScheduleModel->selectSubSchedule(m_nSubScheduleIndex)->id;
@@ -292,7 +321,7 @@ void ScheduleManager::insertStage(const QDateTime date, const QString title, con
     bool success = query.exec(QString("INSERT INTO stage(sub_schedule_id, date, title, details,result,status_id,updated_at,created_at) "
                                       "VALUES (%1,'%2','%3','%4','%5',%6,'%7','%8')")
                               .arg(subId).arg(date.toString("yyyy-MM-dd HH:mm:ss")).arg(title)
-                              .arg(details).arg(result).arg(3)
+                              .arg(details.replace("'","''")).arg(result).arg(3)
                               .arg(addDate).arg(addDate)
                               );
     QString errText = query.lastError().text();
@@ -333,7 +362,7 @@ bool ScheduleManager::editStage(const int stageId, QDateTime date, QString title
     QSqlDatabase db = ConnectionPool::openConnection();
     QSqlQuery query(db);
     bool success = query.exec(QString("UPDATE stage SET date='%1', title='%2', details='%3', result='%4', status_id=%5, updated_at='%6' WHERE id=%7")
-                              .arg(date.toString( "yyyy-MM-dd HH:mm:ss" )).arg(title).arg(details)
+                              .arg(date.toString( "yyyy-MM-dd HH:mm:ss" )).arg(title).arg(details.replace("'","''"))
                               .arg(result).arg(status).arg(updateDate).arg(stageId));
     QString errText = query.lastError().text();
     ConnectionPool::closeConnection(db);
@@ -468,7 +497,7 @@ void ScheduleManager::unfoldSubScheduleAndStage(const int scheduleId)
 
         QDateTime date  = query.value("date").toDateTime();
         QString title   = query.value("title").toString();
-        QString details = query.value("details").toString();
+        QString details = query.value("details").toString().replace("''","'");
         QString result  = query.value("result").toString();
         int status      = query.value("status").toInt();
         int stageId     = query.value("stgId").toInt();

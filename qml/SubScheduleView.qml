@@ -162,16 +162,19 @@ Item {
         Pane {
             id: wrapper
             width: parent.width
-            height:  subScheduleTitle.height + stageRec.height + padding * 2 + 8
+            height: {
+                if(__unfold)
+                    return subScheduleTitle.height + stageRec.height + padding * 2 + 8
+                else
+                    return subScheduleTitle.height + padding * 2 + 8
+            }
             Material.elevation: 6
             Material.background: Color.subScheduleBackground()
-//            color: Material.color(Material.Red)
-//            radius: 5
             property var __view: wrapper.ListView.view
-//            property bool hovered: false
             property bool editing: false
             property bool readySwap: __view.readySwapFromId === id
             property bool curChecked: __view.currentIndex === index
+            property bool __unfold: true
 
             function editNameAction() {
                 if( wrapper.editing ) {
@@ -229,9 +232,6 @@ Item {
                 height: 35
                 anchors.left: wrapper.__view.readyForSwap ? swapSelect.right : parent.left
                 anchors.right: parent.right
-//                anchors.leftMargin: 3
-//                anchors.verticalCenter: wrapper.verticalCenter
-//                radius: 2
                 color: "transparent"// Color.primary() // Color.sNavajoWhite_Half()
 //                opacity: wrapper.hovered ? 0.7 : 1
                 enabled: !wrapper.__view.readyForSwap
@@ -249,18 +249,33 @@ Item {
 //                    onExited: wrapper.hovered = false
                 }                
 
-                Text {
-                    id: titleFlag
-                    width: 5
+//                Text {
+//                    id: titleFlag
+//                    width: 5
+//                    anchors.left: parent.left
+//                    anchors.top: parent.top
+//                    anchors.topMargin: 3
+//                    text: qsTr("•")
+//                }
+
+                Button {
+                    id: unfoldBtn
                     anchors.left: parent.left
-                    anchors.top: parent.top
-                    anchors.topMargin: 3
-                    text: qsTr("•")
+                    anchors.verticalCenter: parent.verticalCenter
+                    width: 40
+                    height: 40
+                    flat: true
+                    icon.source: wrapper.__unfold ? "qrc:/res/unfold.png" : "qrc:/res/fold.png"
+                    icon.width: 16
+                    icon.height: 16
+                    onClicked: {
+                        wrapper.__unfold = !wrapper.__unfold
+                    }
                 }
 
                 TextField {
                     id: titleField
-                    anchors.left: parent.left
+                    anchors.left: unfoldBtn.right
                     anchors.leftMargin: 15
                     anchors.right: parent.right
                     anchors.verticalCenter: parent.verticalCenter
@@ -385,19 +400,9 @@ Item {
                 anchors.right: parent.right
                 anchors.top: subScheduleTitle.bottom
                 height: Math.max(stageView.height+8, 40)
-//                anchors.bottom: parent.bottom
-//                anchors.verticalCenter: subScheduleTitle.verticalCenter
-//                height: Size.subScheduleHeight
                 color: "transparent" //Color.sFloralWhite()
                 enabled: !wrapper.__view.readyForSwap
-
-//                Rectangle {
-//                    anchors.left: parent.left
-//                    height: parent.height
-//                    width: 5
-//                    color: Color.sNavajoWhite_Half()
-//                    opacity: 0.5
-//                }
+                visible: wrapper.__unfold
 
                 Button {
                     anchors.left: parent.left
@@ -421,11 +426,12 @@ Item {
                     id: stageView
 //                    height: parseInt(count/parseInt(width/cellWidth) + 1) * cellHeight
                     height: {
-                        if ( count <= 5 ) {
-                            return (Size.stageHeight + spacing) * count
-                        } else {
-                            (Size.stageHeight + spacing) * 5
-                        }
+//                        if ( count <= 5 ) {
+//                            return (Size.stageHeight + spacing) * count
+//                        } else {
+//                            (Size.stageHeight + spacing) * 5
+//                        }
+                        (Size.stageHeight + spacing) * count
                     }
 
                     anchors.left: parent.left
@@ -557,7 +563,7 @@ Item {
                                 width: Size.stageWidth
                                 elide: Text.ElideRight
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: stageChecked ? Color.stageBackground() : "000000"
+                                color: "#000000"
                             }
 
                             Image {
@@ -567,7 +573,7 @@ Item {
                                 width: 32
                                 height: 32
                                 visible: !Common.isEmptyString(resultText.text)
-                                source: stageChecked ? "qrc:/res/resultPress.png" : "qrc:/res/result.png"
+                                source: "qrc:/res/result.png"
                             }
 
                             Text {
@@ -576,7 +582,7 @@ Item {
                                 anchors.left: resultImg.right
                                 anchors.leftMargin: 2
                                 anchors.verticalCenter: parent.verticalCenter
-                                color: stageChecked ? Color.stageBackground() : "000000"
+                                color: "#000000"
                             }
 
                             Text {
@@ -588,7 +594,7 @@ Item {
                                 width: contentWidth
                                 anchors.right: parent.right
                                 anchors.rightMargin: 10
-                                color: stageChecked ? Color.stageBackground() : "000000"
+                                color: "#000000"
                             }
                         }
                     }

@@ -49,40 +49,31 @@ ApplicationWindow {
             checked: true
             exclusiveGroup: toolBarGroup
         }
-//        Connections {
-//            target: rootTabView
-//            onCurrentIndexChanged: {
-//                if (rootTabView.currentIndex === 0)
-//                    homeToolBar.checked = true
-//                else
-//                   detailsToolBar.checked = true
-//            }
-//        }
     }
 
-    statusBar: StatusBar {
-        id: statisBar
-        implicitWidth: parent.width
-        property string status
-        RowLayout {
-            anchors.fill: parent
-            IconButton {
-                width: 32
-                height: 32
-                hoverIcon: "qrc:/res/syncHover.png"
-                pressIcon: "qrc:/res/syncPress.png"
-                normalIcon: "qrc:/res/sync.png"
-                onClicked: {
-                    if( rootTabView.currentIndex === 0 )
-                        calendarListManager.updateCalendarQMLView()
-                    else if( rootTabView.currentIndex === 1 )
-                        scheduleManager.updateStageWorkStatus()
-                }
-            }
-            Label { text: statisBar.status }
-            Item { Layout.fillWidth: true }
-        }
-    }
+//    statusBar: StatusBar {
+//        id: statisBar
+//        implicitWidth: parent.width
+//        property string status
+//        RowLayout {
+//            anchors.fill: parent
+//            IconButton {
+//                width: 32
+//                height: 32
+//                hoverIcon: "qrc:/res/syncHover.png"
+//                pressIcon: "qrc:/res/syncPress.png"
+//                normalIcon: "qrc:/res/sync.png"
+//                onClicked: {
+//                    if( rootTabView.currentIndex === 0 )
+//                        calendarListManager.updateCalendarQMLView()
+//                    else if( rootTabView.currentIndex === 1 )
+//                        scheduleManager.updateStageWorkStatus()
+//                }
+//            }
+//            Label { text: statisBar.status }
+//            Item { Layout.fillWidth: true }
+//        }
+//    }
 
     Connections {
         target: commonManager
@@ -109,13 +100,14 @@ ApplicationWindow {
         id: tabViewStyle
         TabViewStyle {
             tab: Rectangle {
-                implicitWidth: 80
-                implicitHeight: 60
+                implicitWidth: 60
+                implicitHeight: 50
 //                border.color: "steelblue"
+                color: styleData.selected ? Color.dark() : "transparent"
                 Image {
                     anchors.centerIn: parent
-                    width: 48
-                    height: 48
+                    width: 32
+                    height: 32
                     source: styleData.selected ? Common.resNormalPath( styleData.title ) :
                                                 ( styleData.hovered ? Common.resHoverPath( styleData.title )
                                                                     : Common.resPressPath( styleData.title ) )
@@ -129,6 +121,13 @@ ApplicationWindow {
         style: tabViewStyle
         anchors.fill: parent
         tabPosition: Qt.BottomEdge
+        onCurrentIndexChanged: {
+            if( rootTabView.currentIndex === 0 )
+                calendarListManager.updateCalendarQMLView()
+            else if( rootTabView.currentIndex === 1 )
+                scheduleManager.updateStageWorkStatus()
+        }
+
         Tab {
             title: "home"
 
